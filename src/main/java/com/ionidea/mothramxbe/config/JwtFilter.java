@@ -9,8 +9,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.ionidea.mothramxbe.security.JwtUtil;
-import com.ionidea.mothramxbe.service.CustomUserDetailsService;
+import com.ionidea.mothramxbe.security.service.JwtUtil;
+import com.ionidea.mothramxbe.security.service.CustomUserDetailsService;
 
 import java.io.IOException;
 
@@ -19,6 +19,7 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+
     private final CustomUserDetailsService userDetailsService;
 
     @Override
@@ -49,4 +50,5 @@ public class JwtFilter extends OncePerRequestFilter {
 
         chain.doFilter(request, response);
     }
+
 }

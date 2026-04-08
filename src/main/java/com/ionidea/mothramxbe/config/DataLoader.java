@@ -9,13 +9,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ionidea.mothramxbe.constants.AppConstants;
-import com.ionidea.mothramxbe.entity.Authority;
-import com.ionidea.mothramxbe.entity.Role;
-import com.ionidea.mothramxbe.entity.User;
-import com.ionidea.mothramxbe.repository.AuthorityRepository;
-import com.ionidea.mothramxbe.repository.RoleRepository;
-import com.ionidea.mothramxbe.repository.UserRepository;
+import com.ionidea.mothramxbe.security.constants.AppConstants;
+import com.ionidea.mothramxbe.security.model.Authority;
+import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.repository.AuthorityRepository;
+import com.ionidea.mothramxbe.security.repository.RoleRepository;
+import com.ionidea.mothramxbe.security.repository.UserRepository;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,8 +27,11 @@ import java.util.stream.Collectors;
 public class DataLoader implements ApplicationRunner {
 
     private final RoleRepository roleRepository;
+
     private final AuthorityRepository authorityRepository;
+
     private final UserRepository userRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -98,7 +101,9 @@ public class DataLoader implements ApplicationRunner {
         boolean created = false;
         for (AppConstants.DefaultUser defaultUser : AppConstants.DEFAULT_USERS) {
             if (userRepository.findByEmail(defaultUser.email()).isEmpty()) {
-                Role role = roleRepository.findByName(defaultUser.role())
+
+                Role role = roleRepository
+                        .findByName(defaultUser.role())
                         .orElseThrow(() -> new RuntimeException("Role not found: " + defaultUser.role()));
 
                 User user = new User();
