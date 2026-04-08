@@ -1,31 +1,22 @@
 package com.ionidea.mothramxbe.controller;
 
-
 import lombok.*;
-import org.springframework.security.authentication.*;
 import org.springframework.web.bind.annotation.*;
 
 import com.ionidea.mothramxbe.dto.AuthRequest;
-import com.ionidea.mothramxbe.security.JwtUtil;
+import com.ionidea.mothramxbe.dto.AuthResponseDTO;
+import com.ionidea.mothramxbe.security.AuthService;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authManager;
-    private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
     @PostMapping("/login")
-    public String login(@RequestBody AuthRequest request) {
-
-        authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
-        return jwtUtil.generateToken(request.getEmail());
+    public AuthResponseDTO login(@RequestBody AuthRequest request) {
+        return authService.login(request);
     }
+
 }

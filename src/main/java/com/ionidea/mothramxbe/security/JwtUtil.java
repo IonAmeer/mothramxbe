@@ -12,6 +12,8 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    public static final long EXPIRATION_MS = 86400000; // 24 hours
+
     private final String SECRET = "mothramx_secret_mothramx_secret_123456"; // must be long
 
     private Key getSigningKey() {
@@ -22,7 +24,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -35,4 +37,5 @@ public class JwtUtil {
                 .getBody()
                 .getSubject();
     }
+
 }
