@@ -27,7 +27,7 @@ public class Role {
     private Set<User> users = new HashSet<>();
 
     // ✅ Role → Authorities (keep visible)
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_authority",
             joinColumns = @JoinColumn(name = "role_id"),
