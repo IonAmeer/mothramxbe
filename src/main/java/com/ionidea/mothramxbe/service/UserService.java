@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ionidea.mothramxbe.constants.AppConstants;
 import com.ionidea.mothramxbe.dto.UserRequestDTO;
 import com.ionidea.mothramxbe.entity.Role;
 import com.ionidea.mothramxbe.entity.User;
@@ -34,14 +35,14 @@ public class UserService {
     // 🔹 Check if Developer
     private boolean isDeveloper(Set<Role> roles) {
         return roles.stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase("Developer"));
+                .anyMatch(role -> role.getName().equals(AppConstants.ROLE_DEVELOPER));
     }
 
     // 🔹 Check if Lead
     private boolean isLead(User user) {
         return user.getRoles() != null &&
                 user.getRoles().stream()
-                        .anyMatch(role -> role.getName().equalsIgnoreCase("Lead"));
+                        .anyMatch(role -> role.getName().equals(AppConstants.ROLE_LEAD));
     }
 
     // 🔹 Get roles from DB
