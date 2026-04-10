@@ -17,4 +17,8 @@ public class RefMonth {
 
     private String name;
 
+    private String month;
+
+    private Integer year;
+
 }

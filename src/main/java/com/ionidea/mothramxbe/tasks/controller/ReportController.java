@@ -2,6 +2,7 @@ package com.ionidea.mothramxbe.tasks.controller;
 
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
+import com.ionidea.mothramxbe.tasks.dto.ReportDTO;
 import com.ionidea.mothramxbe.tasks.model.Report;
 import com.ionidea.mothramxbe.tasks.service.ExcelExportService;
 import com.ionidea.mothramxbe.tasks.service.ReportService;
@@ -28,8 +29,8 @@ public class ReportController {
     private ExcelExportService excelService;
 
     @PostMapping
-    public Report save(@RequestBody Report report) {
-        return reportService.saveReport(report);
+    public Report save(@RequestBody ReportDTO dto) {
+        return reportService.save(dto);
     }
 
     @GetMapping("/admin")

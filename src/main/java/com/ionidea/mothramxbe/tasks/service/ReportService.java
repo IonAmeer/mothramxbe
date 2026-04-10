@@ -2,9 +2,11 @@ package com.ionidea.mothramxbe.tasks.service;
 
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
-import com.ionidea.mothramxbe.tasks.model.RefMonth;
+import com.ionidea.mothramxbe.system.entity.RefMonth;
+//import com.ionidea.mothramxbe.tasks.model.RefMonth;
+import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
+import com.ionidea.mothramxbe.tasks.dto.ReportDTO;
 import com.ionidea.mothramxbe.tasks.model.Report;
-import com.ionidea.mothramxbe.tasks.repository.RefMonthRepository;
 import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,42 +42,27 @@ public class ReportService {
     }
 
     // ✅ SAVE REPORT
-    public Report saveReport(Report report) {
+    public Report save(ReportDTO dto) {
 
-        // ✅ FETCH USER FROM DB (IMPORTANT FIX)
-        if (report.getUser() != null && report.getUser().getId() != null) {
-            User user = userRepo.findById(report.getUser().getId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        Report r = new Report();
+//        r.setId(dto.getUserId());
+        r.setStatus(dto.getStatus());
 
-            report.setUser(user);
-        }
+        RefMonth rm = refMonthRepo.findById(dto.getRefMonthId()).orElse(null);
+        r.setRefMonth(rm);
 
-        // ✅ HANDLE MONTH
-        if (report.getRefMonthId() != null) {
-            RefMonth rm = refMonthRepo
-                    .findById(report.getRefMonthId())
-                    .orElse(null);
-
-            report.setRefMonth(rm);
-        }
-
-        // ✅ DEFAULT STATUS
-        if (report.getStatus() == null) {
-            report.setStatus("PENDING");
-        }
-
-        return reportRepo.save(report);
+        return reportRepo.save(r);
     }
 
     public List<Report> getAllReports() {
         return reportRepo.findAll();
     }
 
-    // ✅ GET REPORT BY ID
-    public Report getReportById(Integer id) {
-        return reportRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Report not found"));
-    }
+//    // ✅ GET REPORT BY ID
+//    public Report getReportById(Integer id) {
+//        return reportRepo.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Report not found"));
+//    }
 
     // 🔥 MAIN LEAD API (MOST IMPORTANT)
     public List<Report> getReportsForLead(Integer leadId, Integer monthId) {
@@ -127,9 +114,9 @@ public class ReportService {
         Report report = reportRepo.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-//        if (!report.getUser().getLeadId().equals(leadId)) {
-//            throw new RuntimeException("Access denied");
-//        }
+        if (!report.getUser().getLead().getId().equals(leadId)) {
+            throw new RuntimeException("Access denied");
+        }
 
         return report;
     }

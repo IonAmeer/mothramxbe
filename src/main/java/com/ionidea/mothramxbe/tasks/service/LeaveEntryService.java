@@ -1,5 +1,6 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.tasks.dto.LeaveEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.model.LeaveType;
 import com.ionidea.mothramxbe.tasks.model.Report;
@@ -23,21 +24,19 @@ public class LeaveEntryService {
     @Autowired
     private ReportRepository reportRepo;
 
-    public LeaveEntry save(LeaveEntry le) {
+    public LeaveEntry save(LeaveEntryDTO dto) {
 
-        // ✅ Fetch LeaveType from DB
-        LeaveType lt = leaveTypeRepo
-                .findById(le.getLeaveType().getId())
-                .orElse(null);
+        LeaveEntry le = new LeaveEntry();
 
+        le.setDate(dto.getDate());
+        le.setDuration(dto.getDuration());
+        le.setReason(dto.getReason());
+
+        LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId()).orElse(null);
         le.setLeaveType(lt);
 
-        // ✅ Fetch Report from DB
-        Report rep = reportRepo
-                .findById(le.getReport().getId())
-                .orElse(null);
-
-        le.setReport(rep);
+        Report r = reportRepo.findById(dto.getReportId()).orElse(null);
+        le.setReport(r);
 
         return repo.save(le);
     }

@@ -1,5 +1,6 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.tasks.dto.JiraEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.JiraEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
 import com.ionidea.mothramxbe.tasks.repository.JiraEntryRepository;
@@ -18,19 +19,20 @@ public class JiraEntryService {
     @Autowired
     private ReportRepository reportRepo;
 
-    public JiraEntry save(JiraEntry je) {
+    public JiraEntry save(JiraEntryDTO dto) {
 
-        if (je.getReport() == null || je.getReport().getId() == null) {
-            throw new RuntimeException("Report ID is required");
-        }
+        JiraEntry j = new JiraEntry();
 
-        Report rep = reportRepo
-                .findById(je.getReport().getId())
-                .orElseThrow(() -> new RuntimeException("Report not found"));
+        j.setTicketId(dto.getTicketId());
+        j.setDescription(dto.getDescription());
+        j.setStoryPoints(dto.getStoryPoints());
+        j.setDaysSpent(dto.getDaysSpent());
+        j.setRemaining(dto.getRemaining());
 
-        je.setReport(rep);
+        Report r = reportRepo.findById(dto.getReportId()).orElse(null);
+        j.setReport(r);
 
-        return jiraRepo.save(je);
+        return jiraRepo.save(j);
     }
 
     public List<JiraEntry> getAll() {
