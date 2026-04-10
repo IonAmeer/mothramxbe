@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ionidea.mothramxbe.security.constants.AppConstants;
-import com.ionidea.mothramxbe.security.dto.UserRequestDTO;
+import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
@@ -70,7 +70,7 @@ public class UserService {
     }
 
     // ✅ CREATE USER
-    public User createUser(UserRequestDTO dto) {
+    public User createUser(UserDTO dto) {
 
         // ✅ Email uniqueness check
         if (userRepository.existsByEmail(dto.getEmail())) {
@@ -135,7 +135,7 @@ public class UserService {
     }
 
     // ✅ UPDATE USER
-    public User updateUser(Long id, UserRequestDTO dto) {
+    public User updateUser(Long id, UserDTO dto) {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
