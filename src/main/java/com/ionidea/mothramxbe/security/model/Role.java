@@ -21,12 +21,12 @@ public class Role {
 
     private String name;
 
-    // ✅ Prevent infinite recursion (Role -> User -> Role loop)
+    // ✅ Prevent infinite recursion (RoleDTO -> User -> RoleDTO loop)
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
     private Set<User> users = new HashSet<>();
 
-    // ✅ Role → Authorities (keep visible)
+    // ✅ RoleDTO → Authorities (keep visible)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_authority",

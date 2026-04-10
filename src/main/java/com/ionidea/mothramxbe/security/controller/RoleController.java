@@ -1,7 +1,6 @@
 package com.ionidea.mothramxbe.security.controller;
 
-import com.ionidea.mothramxbe.security.dto.RoleRequestDTO;
-import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import com.ionidea.mothramxbe.security.service.RoleService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,24 +26,24 @@ public class RoleController { // all controllers must return dto
     }
 
     @PostMapping
-    public Role createRole(@RequestBody RoleRequestDTO dto) {
+    public com.ionidea.mothramxbe.security.model.Role createRole(@RequestBody RoleDTO dto) {
         return roleService.createRole(dto);
     }
 
     @GetMapping
-    public List<Role> getAllRoles() {
+    public List<com.ionidea.mothramxbe.security.model.Role> getAllRoles() {
         return roleService.getAllRoles();
     }
 
     @PutMapping("/{id}")
-    public Role updateRole(@PathVariable Long id, @RequestBody RoleRequestDTO dto) {
+    public com.ionidea.mothramxbe.security.model.Role updateRole(@PathVariable Long id, @RequestBody RoleDTO dto) {
         return roleService.updateRole(id, dto);
     }
 
     @DeleteMapping("/{id}")
     public String deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
-        return "Role deleted successfully";
+        return "RoleDTO deleted successfully";
     }
 
 }

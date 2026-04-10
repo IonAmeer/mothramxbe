@@ -23,7 +23,7 @@ public final class AppConstants {
     // Admin super-authority (acts as all permissions)
     public static final String AUTH_ADMIN = "AUTH_ADMIN";
 
-    // Role module
+    // RoleDTO module
     public static final String AUTH_ROLE_CREATE = "ROLE_CREATE";
 
     public static final String AUTH_ROLE_READ = "ROLE_READ";

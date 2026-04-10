@@ -27,6 +27,7 @@ public class UserController { // all controllers must return dto
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('AUTH_ADMIN')")
     public User createUser(@RequestBody UserRequestDTO dto) {
         return userService.createUser(dto);
     }
