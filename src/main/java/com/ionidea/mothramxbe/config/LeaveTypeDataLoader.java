@@ -1,32 +1,48 @@
 package com.ionidea.mothramxbe.config;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ionidea.mothramxbe.tasks.constants.TaskConstants;
 import com.ionidea.mothramxbe.tasks.model.LeaveType;
 import com.ionidea.mothramxbe.tasks.repository.LeaveTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
-public class LeaveTypeDataLoader implements CommandLineRunner {
+@Order(2)
+@RequiredArgsConstructor
+public class LeaveTypeDataLoader implements ApplicationRunner {
 
-    @Autowired
-    private LeaveTypeRepository repo;
+    private final LeaveTypeRepository leaveTypeRepository;
 
     @Override
-    public void run(String... args) {
+    @Transactional
+    public void run(ApplicationArguments args) {
+        boolean leaveTypesCreated = seedLeaveTypes();
 
-        if (repo.count() > 0) return;
+        log.info("========== Leave Type Data Loader Summary ==========");
+        log.info("Leave Types: {}", leaveTypesCreated ? "CREATED" : "ALREADY EXIST");
+        log.info("====================================================");
+    }
 
-        LeaveType l1 = new LeaveType();
-        l1.setName("Annual");
-        l1.setDescription("Annual Leave");
-
-        LeaveType l2 = new LeaveType();
-        l2.setName("Sick");
-        l2.setDescription("Sick Leave");
-
-        repo.save(l1);
-        repo.save(l2);
+    private boolean seedLeaveTypes() {
+        boolean created = false;
+        for (TaskConstants.DefaultLeaveType defaultLeaveType : TaskConstants.DEFAULT_LEAVE_TYPES) {
+            if (leaveTypeRepository.findByName(defaultLeaveType.name()).isEmpty()) {
+                LeaveType leaveType = new LeaveType();
+                leaveType.setName(defaultLeaveType.name());
+                leaveType.setDescription(defaultLeaveType.description());
+                leaveTypeRepository.save(leaveType);
+                log.info("Seeded leave type: {}", defaultLeaveType.name());
+                created = true;
+            }
+        }
+        return created;
     }
 
 }
