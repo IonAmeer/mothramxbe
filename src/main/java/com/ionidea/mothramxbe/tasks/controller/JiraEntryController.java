@@ -7,11 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/jira")
-@CrossOrigin("*")
+@RequestMapping("/jira")
 public class JiraEntryController {
 
     @Autowired
@@ -25,7 +22,7 @@ public class JiraEntryController {
 
     @PreAuthorize("hasRole('DEVELOPER')")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable Long id) {
         jiraService.delete(id);
     }
 

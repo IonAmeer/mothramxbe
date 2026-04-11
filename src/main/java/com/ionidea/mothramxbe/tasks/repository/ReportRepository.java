@@ -5,14 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ReportRepository extends JpaRepository<Report, Integer> {
+public interface ReportRepository extends JpaRepository<Report, Long> {
 
-    List<Report> findByUser_Lead_IdAndRefMonthId(Integer leadId, Integer monthId);
+    List<Report> findByUser_Lead_IdAndRefMonthId(Long leadId, Long monthId);
 
-    List<Report> findByUserIdAndUser_Lead_Id(Integer userId, Integer leadId);
+    List<Report> findByUserIdAndUser_Lead_Id(Long userId, Long leadId);
 
-    List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Integer userId, Integer leadId, Integer refMonthId);
+    List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Long userId, Long leadId, Long refMonthId);
 
-    List<Report> findByUser_Lead_Id(Integer leadId);
+    List<Report> findByUser_Lead_Id(Long leadId);
 
 }

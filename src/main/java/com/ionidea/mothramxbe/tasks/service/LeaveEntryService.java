@@ -45,7 +45,7 @@ public class LeaveEntryService {
         return repo.findAll();
     }
 
-    public void delete(Integer id) {
+    public void delete(Long id) {
         repo.deleteById(id);
     }
 

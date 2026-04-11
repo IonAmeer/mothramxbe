@@ -16,13 +16,13 @@ public class TeamTaskServiceImpl implements TeamTaskService {
     private ReportService reportService;
 
     @Override
-    public List<TeamTaskDTO> getReportsForLead(Integer leadId, Integer monthId) {
+    public List<TeamTaskDTO> getReportsForLead(Long leadId, Long monthId) {
         List<Report> reports = reportService.getReportsForLead(leadId, monthId);
         return reports.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public TeamTaskDTO updateStatus(Integer reportId, String status, String email, String reason) {
+    public TeamTaskDTO updateStatus(Long reportId, String status, String email, String reason) {
         Report report = reportService.updateStatus(reportId, status, email, "LEAD", reason);
         return convertToDTO(report);
     }

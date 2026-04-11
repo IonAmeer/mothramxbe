@@ -57,17 +57,17 @@ public class TeamTaskController {
 
     @GetMapping("/reports")
     public List<Report> getReportsForLead(Authentication auth,
-                                          @RequestParam Integer monthId) {
+                                          @RequestParam Long monthId) {
 
         String email = auth.getName();
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        return reportService.getReportsForLead(lead.getId().intValue(), monthId);
+        return reportService.getReportsForLead(lead.getId(), monthId);
     }
 
     @PutMapping("/reports/status/{id}")
-    public Report updateStatus(@PathVariable Integer id,
+    public Report updateStatus(@PathVariable Long id,
                                @RequestParam String status,
                                @RequestParam(required = false) String reason,
                                Authentication auth) {
@@ -77,8 +77,8 @@ public class TeamTaskController {
 
     @GetMapping("/reports/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
-            @PathVariable Integer developerId,
-            @RequestParam Integer monthId,
+            @PathVariable Long developerId,
+            @RequestParam Long monthId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -87,7 +87,7 @@ public class TeamTaskController {
 
         return reportService.getReportsByDeveloperAndMonth(
                 developerId,
-                lead.getId().intValue(),
+                lead.getId(),
                 monthId
         );
     }
@@ -96,7 +96,7 @@ public class TeamTaskController {
 
     @GetMapping("/export/developer/{developerId}")
     public ResponseEntity<byte[]> exportDeveloperReports(
-            @PathVariable Integer developerId,
+            @PathVariable Long developerId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -104,7 +104,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getReportsByDeveloper(developerId, lead.getId().intValue());
+                reportService.getReportsByDeveloper(developerId, lead.getId());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
@@ -121,7 +121,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getAllReportsByLead(lead.getId().intValue());
+                reportService.getAllReportsByLead(lead.getId());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 

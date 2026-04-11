@@ -18,12 +18,10 @@ public class LeaveTypeDataLoader implements CommandLineRunner {
         if (repo.count() > 0) return;
 
         LeaveType l1 = new LeaveType();
-        l1.setId(1);
         l1.setName("Annual");
         l1.setDescription("Annual Leave");
 
         LeaveType l2 = new LeaveType();
-        l2.setId(2);
         l2.setName("Sick");
         l2.setDescription("Sick Leave");
 

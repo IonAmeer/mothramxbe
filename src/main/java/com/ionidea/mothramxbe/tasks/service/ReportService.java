@@ -26,7 +26,7 @@ public class ReportService {
     private ReportRepository reportRepo;
 
     // ✅ GET REPORTS BY DEVELOPER UNDER A LEAD
-    public List<Report> getReportsByDeveloper(Integer developerId, Integer leadId) {
+    public List<Report> getReportsByDeveloper(Long developerId, Long leadId) {
 
         if (developerId == null || leadId == null) {
             throw new RuntimeException("DeveloperId and LeadId are required");
@@ -65,7 +65,7 @@ public class ReportService {
 //    }
 
     // 🔥 MAIN LEAD API (MOST IMPORTANT)
-    public List<Report> getReportsForLead(Integer leadId, Integer monthId) {
+    public List<Report> getReportsForLead(Long leadId, Long monthId) {
 
         if (leadId == null || monthId == null) {
             throw new RuntimeException("LeadId and MonthId are required");
@@ -75,7 +75,7 @@ public class ReportService {
     }
 
     // ✅ APPROVE / REJECT REPORT
-    public Report updateStatus(Integer id, String status, String approvedBy, String role, String reason) {
+    public Report updateStatus(Long id, String status, String approvedBy, String role, String reason) {
 
         Report report = reportRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -109,7 +109,7 @@ public class ReportService {
         return reportRepo.save(report);
     }
 
-    public Report getReportByIdForLead(Integer reportId, Integer leadId) {
+    public Report getReportByIdForLead(Long reportId, Long leadId) {
 
         Report report = reportRepo.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -122,9 +122,9 @@ public class ReportService {
     }
 
     public List<Report> getReportsByDeveloperAndMonth(
-            Integer developerId,
-            Integer leadId,
-            Integer monthId) {
+            Long developerId,
+            Long leadId,
+            Long monthId) {
 
         return reportRepo.findByUserIdAndUser_Lead_IdAndRefMonthId(
                 developerId,
@@ -133,7 +133,7 @@ public class ReportService {
         );
     }
 
-    public List<Report> getAllReportsByLead(Integer leadId) {
+    public List<Report> getAllReportsByLead(Long leadId) {
         return reportRepo.findByUser_Lead_Id(leadId);
     }
 
