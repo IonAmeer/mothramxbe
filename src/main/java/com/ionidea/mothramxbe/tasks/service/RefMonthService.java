@@ -25,16 +25,7 @@ public class RefMonthService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ SAVE
-    public RefMonthDTO save(RefMonthDTO dto) {
-        RefMonth entity = new RefMonth();
 
-        //entity.setName(dto.getName());
-        entity.setMonth(dto.getMonth());
-        entity.setYear(dto.getYear());
-
-        return mapToDTO(refMonthRepo.save(entity));
-    }
 
     // ✅ GET BY ID
     public RefMonthDTO getById(Long id) {
@@ -48,7 +39,7 @@ public class RefMonthService {
     private RefMonthDTO mapToDTO(RefMonth rm) {
         RefMonthDTO dto = new RefMonthDTO();
         dto.setId(rm.getId());
-        //dto.setName(rm.getName());
+        //dto.setLabel(rm.getLabel());
         dto.setMonth(rm.getMonth());
         dto.setYear(rm.getYear());
         return dto;

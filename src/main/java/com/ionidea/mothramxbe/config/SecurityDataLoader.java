@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Component
 @Order(1)
 @RequiredArgsConstructor
-public class DataLoader implements ApplicationRunner {
+public class SecurityDataLoader implements ApplicationRunner {
 
     private final RoleRepository roleRepository;
 

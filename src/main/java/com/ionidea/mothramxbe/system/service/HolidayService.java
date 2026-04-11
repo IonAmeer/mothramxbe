@@ -106,7 +106,7 @@ public class HolidayService {
                 .name(h.getName())
                 .day(h.getDay())
                 .year(h.getYear())
-                .month(h.getMonth().getName())
+                .month(h.getMonth().getLabel())
                 .build();
     }
 
