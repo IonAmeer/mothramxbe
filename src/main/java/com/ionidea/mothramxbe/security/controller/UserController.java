@@ -1,6 +1,6 @@
 package com.ionidea.mothramxbe.security.controller;
 
-import com.ionidea.mothramxbe.security.dto.UserRequestDTO;
+import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +27,7 @@ public class UserController { // all controllers must return dto
     }
 
     @PostMapping
-    public User createUser(@RequestBody UserRequestDTO dto) {
+    public User createUser(@RequestBody UserDTO dto) {
         return userService.createUser(dto);
     }
 
@@ -42,7 +42,7 @@ public class UserController { // all controllers must return dto
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody UserRequestDTO dto) {
+    public User updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
         return userService.updateUser(id, dto);
     }
 
