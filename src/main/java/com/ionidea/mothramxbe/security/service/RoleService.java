@@ -1,100 +1,102 @@
 package com.ionidea.mothramxbe.security.service;
 
-import com.ionidea.mothramxbe.security.dto.RoleDTO;
-import org.springframework.stereotype.Service;
-
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
+import com.ionidea.mothramxbe.security.dto.AuthorityDto;
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
+import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.model.RoleAuthority;
+import com.ionidea.mothramxbe.security.model.UserRole;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ionidea.mothramxbe.security.model.Authority;
 import com.ionidea.mothramxbe.security.repository.AuthorityRepository;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class RoleService {
 
     private final RoleRepository roleRepository;
 
     private final AuthorityRepository authorityRepository;
 
-    public RoleService(RoleRepository roleRepository,
-                       AuthorityRepository authorityRepository) {
-        this.roleRepository = roleRepository;
-        this.authorityRepository = authorityRepository;
-    }
+    @Transactional
+    public RoleDTO createRole(RoleDTO dto) {
 
-    // ✅ CREATE
-    public com.ionidea.mothramxbe.security.model.Role createRole(RoleDTO dto) {
-
-        Set<Authority> authorities = new HashSet<>();
-
-        for (Long id : dto.getAuthorityIds()) {
-            Authority auth = authorityRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", id));
-            authorities.add(auth);
-        }
-
-        com.ionidea.mothramxbe.security.model.Role role = new com.ionidea.mothramxbe.security.model.Role();
+        Role role = new Role();
         role.setName(dto.getName());
-        role.setAuthorities(authorities);
-
-        return roleRepository.save(role);
-    }
-
-    // ✅ READ
-    public List<com.ionidea.mothramxbe.security.model.Role> getAllRoles() {
-        return roleRepository.findAll();
-    }
-
-    // ✅ UPDATE (FIXED)
-    public com.ionidea.mothramxbe.security.model.Role updateRole(Long id, RoleDTO dto) {
-
-        com.ionidea.mothramxbe.security.model.Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("RoleDTO", "id", id));
-
-        Set<Authority> authorities = new HashSet<>();
 
         for (Long authId : dto.getAuthorityIds()) {
-            Authority auth = authorityRepository.findById(authId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
-            authorities.add(auth);
+            Authority auth = authorityRepository.findById(authId).orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
+            RoleAuthority ra = new RoleAuthority();
+            ra.setRole(role);
+            ra.setAuthority(auth);
+            role.getRoleAuthorities().add(ra);
         }
 
-        role.setName(dto.getName());
-        role.setAuthorities(authorities);
-
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        return toResponseDTO(saved);
     }
 
-    // ✅ DELETE (SAFE VERSION)
-//    public void deleteRole(Long id) {
-//
-//        RoleDTO role = roleRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("RoleDTO not found"));
-//
-//        // 🔥 IMPORTANT: clear relations before delete
-//        role.getAuthorities().clear();
-//
-//        roleRepository.delete(role);
-//    }
+    public List<RoleDTO> getAllRoles() {
+        return roleRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
 
-    public void deleteRole(Long id) {
+    @Transactional
+    public RoleDTO updateRole(Long id, RoleDTO dto) {
 
-        com.ionidea.mothramxbe.security.model.Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("RoleDTO", "id", id));
+        Role role = roleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
 
-        // 🔥 STEP 1: Remove role from all users
-        if (role.getUsers() != null) {
-            role.getUsers().forEach(user -> user.getRoles().remove(role));
+        role.setName(dto.getName());
+
+        // orphanRemoval = true will DELETE the old RoleAuthority rows
+        role.getRoleAuthorities().clear();
+
+        for (Long authId : dto.getAuthorityIds()) {
+            Authority auth = authorityRepository.findById(authId).orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
+            RoleAuthority ra = new RoleAuthority();
+            ra.setRole(role);
+            ra.setAuthority(auth);
+            role.getRoleAuthorities().add(ra);
         }
 
-        // 🔥 STEP 2: Clear role-authority mapping
-        role.getAuthorities().clear();
+        Role saved = roleRepository.save(role);
+        return toResponseDTO(saved);
+    }
 
-        // 🔥 STEP 3: Delete role
+    @Transactional
+    public void deleteRole(Long id) {
+
+        Role role = roleRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
+
+        if (role.getUserRoles() != null) {
+            for (UserRole ur : new HashSet<>(role.getUserRoles())) {
+                ur.getUser().getUserRoles().remove(ur);
+            }
+            role.getUserRoles().clear();
+        }
+
+        role.getRoleAuthorities().clear();
+
         roleRepository.delete(role);
+    }
+
+    private RoleDTO toResponseDTO(Role role) {
+        List<AuthorityDto> authorities = role.getRoleAuthorities()
+                .stream()
+                .map(ra -> new AuthorityDto(ra.getAuthority().getId(), ra.getAuthority().getName()))
+                .toList();
+        return new RoleDTO(role.getId(), role.getName(), null, authorities);
     }
 
 }

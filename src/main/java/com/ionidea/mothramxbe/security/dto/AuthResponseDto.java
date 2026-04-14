@@ -1,13 +1,19 @@
 package com.ionidea.mothramxbe.security.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
-@Data
-@Builder
-public class AuthResponseDTO {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(chain = true)
+public class AuthResponseDto {
 
     private String token;
 
