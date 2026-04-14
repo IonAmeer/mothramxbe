@@ -58,7 +58,7 @@ public class UserService {
 
         for (Long roleId : roleIds) {
             Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", roleId));
+                    .orElseThrow(() -> new ResourceNotFoundException("RoleDTO", "id", roleId));
 
             roles.add(role);
         }

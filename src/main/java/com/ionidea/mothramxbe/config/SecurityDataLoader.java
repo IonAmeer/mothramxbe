@@ -45,7 +45,7 @@ public class SecurityDataLoader implements ApplicationRunner {
         log.info("========== Data Loader Summary ==========");
         log.info("Roles:            {}", rolesCreated ? "CREATED" : "ALREADY EXIST");
         log.info("Authorities:      {}", authoritiesCreated ? "CREATED" : "ALREADY EXIST");
-        log.info("Role-Authorities: {}", roleAuthoritiesCreated ? "ASSIGNED" : "ALREADY ASSIGNED");
+        log.info("RoleDTO-Authorities: {}", roleAuthoritiesCreated ? "ASSIGNED" : "ALREADY ASSIGNED");
         log.info("Users:            {}", usersCreated ? "CREATED — default passwords in use, change them immediately!" : "ALREADY EXIST");
         log.info("==========================================");
     }
@@ -80,7 +80,7 @@ public class SecurityDataLoader implements ApplicationRunner {
         boolean created = false;
         for (var entry : AppConstants.ROLE_AUTHORITIES.entrySet()) {
             Role role = roleRepository.findByName(entry.getKey())
-                    .orElseThrow(() -> new RuntimeException("Role not found: " + entry.getKey()));
+                    .orElseThrow(() -> new RuntimeException("RoleDTO not found: " + entry.getKey()));
 
             if (role.getAuthorities().isEmpty()) {
                 Set<Authority> authorities = entry.getValue().stream()
@@ -104,7 +104,7 @@ public class SecurityDataLoader implements ApplicationRunner {
 
                 Role role = roleRepository
                         .findByName(defaultUser.role())
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + defaultUser.role()));
+                        .orElseThrow(() -> new RuntimeException("RoleDTO not found: " + defaultUser.role()));
 
                 User user = new User();
                 user.setName(defaultUser.name());

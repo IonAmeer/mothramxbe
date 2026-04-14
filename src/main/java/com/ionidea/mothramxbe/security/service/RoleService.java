@@ -1,11 +1,10 @@
 package com.ionidea.mothramxbe.security.service;
 
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import org.springframework.stereotype.Service;
 
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
-import com.ionidea.mothramxbe.security.dto.RoleRequestDTO;
 import com.ionidea.mothramxbe.security.model.Authority;
-import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.repository.AuthorityRepository;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 
@@ -27,7 +26,7 @@ public class RoleService {
     }
 
     // ✅ CREATE
-    public Role createRole(RoleRequestDTO dto) {
+    public com.ionidea.mothramxbe.security.model.Role createRole(RoleDTO dto) {
 
         Set<Authority> authorities = new HashSet<>();
 
@@ -37,7 +36,7 @@ public class RoleService {
             authorities.add(auth);
         }
 
-        Role role = new Role();
+        com.ionidea.mothramxbe.security.model.Role role = new com.ionidea.mothramxbe.security.model.Role();
         role.setName(dto.getName());
         role.setAuthorities(authorities);
 
@@ -45,15 +44,15 @@ public class RoleService {
     }
 
     // ✅ READ
-    public List<Role> getAllRoles() {
+    public List<com.ionidea.mothramxbe.security.model.Role> getAllRoles() {
         return roleRepository.findAll();
     }
 
     // ✅ UPDATE (FIXED)
-    public Role updateRole(Long id, RoleRequestDTO dto) {
+    public com.ionidea.mothramxbe.security.model.Role updateRole(Long id, RoleDTO dto) {
 
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
+        com.ionidea.mothramxbe.security.model.Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RoleDTO", "id", id));
 
         Set<Authority> authorities = new HashSet<>();
 
@@ -72,8 +71,8 @@ public class RoleService {
     // ✅ DELETE (SAFE VERSION)
 //    public void deleteRole(Long id) {
 //
-//        Role role = roleRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Role not found"));
+//        RoleDTO role = roleRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("RoleDTO not found"));
 //
 //        // 🔥 IMPORTANT: clear relations before delete
 //        role.getAuthorities().clear();
@@ -83,8 +82,8 @@ public class RoleService {
 
     public void deleteRole(Long id) {
 
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
+        com.ionidea.mothramxbe.security.model.Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RoleDTO", "id", id));
 
         // 🔥 STEP 1: Remove role from all users
         if (role.getUsers() != null) {
