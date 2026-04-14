@@ -1,13 +1,18 @@
 package com.ionidea.mothramxbe.security.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -21,5 +26,9 @@ public class Authority {
     private Long id;
 
     private String name;
+
+    @OneToMany(mappedBy = "authority")
+    @JsonIgnore
+    private Set<RoleAuthority> roleAuthorities = new HashSet<>();
 
 }

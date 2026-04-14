@@ -1,15 +1,24 @@
 package com.ionidea.mothramxbe.security.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "roles")
@@ -21,32 +30,11 @@ public class Role {
 
     private String name;
 
-    // ✅ Prevent infinite recursion (RoleDTO -> User -> RoleDTO loop)
-    @ManyToMany(mappedBy = "roles")
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RoleAuthority> roleAuthorities = new HashSet<>();
+
+    @OneToMany(mappedBy = "role")
     @JsonIgnore
-    private Set<User> users = new HashSet<>();
-
-    // ✅ RoleDTO → Authorities (keep visible)
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "role_authority",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "authority_id")
-    )
-    private Set<Authority> authorities = new HashSet<>();
-
-    // ✅ Equals & HashCode (based only on ID)
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Role)) return false;
-        Role role = (Role) o;
-        return id != null && id.equals(role.id);
-    }
+    private Set<UserRole> userRoles = new HashSet<>();
 
 }

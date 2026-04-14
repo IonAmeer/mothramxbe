@@ -3,7 +3,7 @@ package com.ionidea.mothramxbe.security.dto;
 import lombok.Data;
 
 @Data
-public class AuthRequest {
+public class AuthRequestDto {
 
     private String email;
 

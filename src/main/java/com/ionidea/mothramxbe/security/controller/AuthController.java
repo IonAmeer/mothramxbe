@@ -2,8 +2,8 @@ package com.ionidea.mothramxbe.security.controller;
 
 import lombok.RequiredArgsConstructor;
 
-import com.ionidea.mothramxbe.security.dto.AuthRequest;
-import com.ionidea.mothramxbe.security.dto.AuthResponseDTO;
+import com.ionidea.mothramxbe.security.dto.AuthRequestDto;
+import com.ionidea.mothramxbe.security.dto.AuthResponseDto;
 import com.ionidea.mothramxbe.security.service.AuthService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +18,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public AuthResponseDTO login(@RequestBody AuthRequest request) {
+    public AuthResponseDto login(@RequestBody AuthRequestDto request) {
         return authService.login(request);
     }
 
