@@ -2,16 +2,16 @@ package com.ionidea.mothramxbe.security.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.ionidea.mothramxbe.exception.BadRequestException;
+import com.ionidea.mothramxbe.exception.DuplicateResourceException;
+import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
 import com.ionidea.mothramxbe.security.constants.AppConstants;
 import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
-
-import org.springframework.http.HttpStatus;
 
 import java.util.HashSet;
 import java.util.List;
@@ -51,17 +51,14 @@ public class UserService {
     private Set<Role> getRolesFromDTO(Set<Long> roleIds) {
 
         if (roleIds == null || roleIds.isEmpty()) {
-            throw new RuntimeException("At least one role must be assigned");
+            throw new BadRequestException("At least one role must be assigned");
         }
 
         Set<Role> roles = new HashSet<>();
 
         for (Long roleId : roleIds) {
             Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Role not found with id: " + roleId
-                    ));
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", roleId));
 
             roles.add(role);
         }
@@ -74,10 +71,7 @@ public class UserService {
 
         // ✅ Email uniqueness check
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Email already exists"
-            );
+            throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
 
         Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
@@ -93,23 +87,14 @@ public class UserService {
         if (isDeveloper) {
 
             if (dto.getLeadId() == null) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Developer must have a Lead assigned"
-                );
+                throw new BadRequestException("Developer must have a Lead assigned");
             }
 
             User lead = userRepository.findById(dto.getLeadId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Lead not found with id: " + dto.getLeadId()
-                    ));
+                    .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
 
             if (!isLead(lead)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Assigned user is not a valid Lead"
-                );
+                throw new BadRequestException("Assigned user is not a valid Lead");
             }
 
             user.setLead(lead);
@@ -138,17 +123,11 @@ public class UserService {
     public User updateUser(Long id, UserDTO dto) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User not found with id: " + id
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         // ✅ Email uniqueness check (exclude current user)
         if (userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Email already exists "
-            );
+            throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
 
         Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
@@ -167,26 +146,18 @@ public class UserService {
         if (isDeveloper) {
 
             if (dto.getLeadId() == null) {
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Developer must have a Lead assigned "
-                );
-
+                throw new BadRequestException("Developer must have a Lead assigned");
             }
 
             if (dto.getLeadId().equals(id)) {
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User cannot be their own lead "
-                );
-
+                throw new BadRequestException("User cannot be their own lead");
             }
 
             User lead = userRepository.findById(dto.getLeadId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lead not found with id: " + dto.getLeadId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
 
             if (!isLead(lead)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assigned user is not a valid Lead");
+                throw new BadRequestException("Assigned user is not a valid Lead");
             }
 
             user.setLead(lead);
@@ -202,7 +173,7 @@ public class UserService {
     public void deleteUser(Long id) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         userRepository.delete(user);
     }

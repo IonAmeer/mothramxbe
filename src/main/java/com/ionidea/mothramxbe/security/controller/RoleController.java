@@ -3,6 +3,7 @@ package com.ionidea.mothramxbe.security.controller;
 import com.ionidea.mothramxbe.security.dto.RoleRequestDTO;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.service.RoleService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +17,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/roles")
-public class RoleController { // all controllers must return response entity
+@PreAuthorize("hasAuthority('AUTH_ADMIN')")
+public class RoleController { // all controllers must return dto
 
     private final RoleService roleService;
 
