@@ -39,7 +39,7 @@ public class JiraEntryService {
         return jiraRepo.findAll();
     }
 
-    public void delete(Integer id) {
+    public void delete(Long id) {
         jiraRepo.deleteById(id);
     }
 

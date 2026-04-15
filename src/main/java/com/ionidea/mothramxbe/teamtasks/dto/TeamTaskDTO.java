@@ -7,13 +7,13 @@ import lombok.*;
 @AllArgsConstructor
 public class TeamTaskDTO {
 
-    private Integer reportId;
+    private Long reportId;
 
     private String developerName;
 
     private String status;
 
-    private Integer monthId;
+    private Long monthId;
 
     private String approvedBy;
 

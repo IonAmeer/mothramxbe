@@ -11,7 +11,8 @@ import lombok.*;
 public class LeaveType {
 
     @Id
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name;
 

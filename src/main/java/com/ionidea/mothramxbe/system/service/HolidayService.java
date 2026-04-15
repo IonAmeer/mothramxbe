@@ -2,6 +2,8 @@ package com.ionidea.mothramxbe.system.service;
 
 import org.springframework.stereotype.Service;
 
+import com.ionidea.mothramxbe.exception.DuplicateResourceException;
+import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
 import com.ionidea.mothramxbe.system.dto.HolidayRequestDTO;
 import com.ionidea.mothramxbe.system.dto.HolidayResponseDTO;
 import com.ionidea.mothramxbe.system.entity.Holiday;
@@ -33,11 +35,11 @@ public class HolidayService {
                 .findByYearAndMonth_IdAndDay(dto.getYear(), dto.getMonthId(), dto.getDay());
 
         if (existing.isPresent()) {
-            throw new RuntimeException("Holiday already exists for this date");
+            throw new DuplicateResourceException("Holiday already exists for this date");
         }
 
         RefMonth month = monthRepository.findById(dto.getMonthId())
-                .orElseThrow(() -> new RuntimeException("Month not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Month", "id", dto.getMonthId()));
 
         Holiday holiday = new Holiday();
         holiday.setName(dto.getName());
@@ -54,17 +56,17 @@ public class HolidayService {
     public HolidayResponseDTO updateHoliday(Long id, HolidayRequestDTO dto) {
 
         Holiday holiday = holidayRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Holiday not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Holiday", "id", id));
 
         Optional<Holiday> existing = holidayRepository
                 .findByYearAndMonth_IdAndDay(dto.getYear(), dto.getMonthId(), dto.getDay());
 
         if (existing.isPresent() && !existing.get().getId().equals(id)) {
-            throw new RuntimeException("Holiday already exists for this date");
+            throw new DuplicateResourceException("Holiday already exists for this date");
         }
 
         RefMonth month = monthRepository.findById(dto.getMonthId())
-                .orElseThrow(() -> new RuntimeException("Month not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Month", "id", dto.getMonthId()));
 
         holiday.setName(dto.getName());
         holiday.setDay(dto.getDay());
@@ -79,7 +81,7 @@ public class HolidayService {
     // ✅ DELETE
     public void deleteHoliday(Long id) {
         Holiday holiday = holidayRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Holiday not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Holiday", "id", id));
 
         holidayRepository.delete(holiday);
     }
@@ -106,7 +108,7 @@ public class HolidayService {
                 .name(h.getName())
                 .day(h.getDay())
                 .year(h.getYear())
-                .month(h.getMonth().getName())
+                .month(h.getMonth().getLabel())
                 .build();
     }
 

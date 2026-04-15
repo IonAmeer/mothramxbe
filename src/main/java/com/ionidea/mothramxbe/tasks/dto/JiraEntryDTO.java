@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class JiraEntryDTO {
 
-    private Integer id;
+    private Long id;
 
     private String ticketId;
 
@@ -17,6 +17,6 @@ public class JiraEntryDTO {
 
     private Integer remaining;
 
-    private Integer reportId;
+    private Long reportId;
 
 }

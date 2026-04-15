@@ -16,7 +16,7 @@ public class Report {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -27,7 +27,7 @@ public class Report {
     private String approvedBy;
 
     @Column(name = "ref_month_id")
-    private Integer refMonthId;
+    private Long refMonthId;
 
     private String rejectionReason;
 

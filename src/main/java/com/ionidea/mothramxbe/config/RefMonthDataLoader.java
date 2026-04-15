@@ -1,44 +1,59 @@
 package com.ionidea.mothramxbe.config;
 
-import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
-//import com.ionidea.mothramxbe.tasks.model.RefMonth;
-import com.ionidea.mothramxbe.system.entity.RefMonth;
-import com.ionidea.mothramxbe.tasks.repository.TaskRefMonthRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.ionidea.mothramxbe.system.entity.RefMonth;
+import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
+
+import java.time.Month;
+import java.time.Year;
+import java.time.format.TextStyle;
+import java.util.Locale;
+
+@Slf4j
 @Component
-public class RefMonthDataLoader implements CommandLineRunner {
+@Order(3)
+@RequiredArgsConstructor
+public class RefMonthDataLoader implements ApplicationRunner {
 
-    @Autowired
-    private RefMonthRepository repo;
+    private final RefMonthRepository refMonthRepository;
 
     @Override
-    public void run(String... args) {
+    @Transactional
+    public void run(ApplicationArguments args) {
+        boolean refMonthsCreated = seedRefMonths();
 
-        if (repo.count() > 0) {
-            return;
-        }
+        log.info("========== Ref Month Data Loader Summary ==========");
+        log.info("Ref Months: {}", refMonthsCreated ? "CREATED" : "ALREADY EXIST");
+        log.info("====================================================");
+    }
 
-        String[] months = {
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        };
+    private boolean seedRefMonths() {
+        boolean created = false;
+        int currentYear = Year.now().getValue();
 
-        //Long id = 1L;
+        for (int year = currentYear; year <= currentYear + 1; year++) {
+            for (Month month : Month.values()) {
+                String shortName = month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
 
-        for (int year = 2025; year <= 2026; year++) {
-            for (String m : months) {
-
-                RefMonth rm = new RefMonth();
-                //rm.setId(id++);
-                rm.setMonth(m);
-                rm.setYear(year);
-
-                repo.save(rm);
+                if (refMonthRepository.findByMonthAndYear(shortName, year).isEmpty()) {
+                    RefMonth refMonth = new RefMonth();
+                    refMonth.setMonth(shortName);
+                    refMonth.setYear(year);
+                    refMonth.setLabel(shortName + " " + year);
+                    refMonthRepository.save(refMonth);
+                    log.info("Seeded ref month: {} {}", shortName, year);
+                    created = true;
+                }
             }
         }
+        return created;
     }
 
 }

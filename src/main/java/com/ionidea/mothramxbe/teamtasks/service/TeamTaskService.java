@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface TeamTaskService {
 
-    List<TeamTaskDTO> getReportsForLead(Integer leadId, Integer monthId);
+    List<TeamTaskDTO> getReportsForLead(Long leadId, Long monthId);
 
-    TeamTaskDTO updateStatus(Integer reportId, String status, String email, String reason);
+    TeamTaskDTO updateStatus(Long reportId, String status, String email, String reason);
 
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController { // all controllers must return response entity
+public class AuthController {
 
     private final AuthService authService;
 

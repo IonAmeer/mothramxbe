@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class LeaveEntryDTO {
 
-    private Integer id;
+    private Long id;
 
     private String date;
 
@@ -13,8 +13,8 @@ public class LeaveEntryDTO {
 
     private String reason;
 
-    private Integer leaveTypeId;
+    private Long leaveTypeId;
 
-    private Integer reportId;
+    private Long reportId;
 
 }

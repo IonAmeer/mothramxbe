@@ -39,21 +39,21 @@ public class ReportController {
     }
 
     @GetMapping("/lead")
-    public List<Report> getReportsForLead(Authentication auth, @RequestParam Integer monthId) {
+    public List<Report> getReportsForLead(Authentication auth, @RequestParam Long monthId) {
         String email = auth.getName();
         User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
-        return reportService.getReportsForLead(lead.getId().intValue(), monthId);
+        return reportService.getReportsForLead(lead.getId(), monthId);
     }
 
     @GetMapping("/{id}")
-    public Report getById(@PathVariable Integer id, Authentication auth) {
+    public Report getById(@PathVariable Long id, Authentication auth) {
         String email = auth.getName();
         User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
-        return reportService.getReportByIdForLead(id, lead.getId().intValue());
+        return reportService.getReportByIdForLead(id, lead.getId());
     }
 
     @GetMapping("/export/lead/{leadId}/developer/{developerId}")
-    public ResponseEntity<byte[]> exportDeveloperReports(@PathVariable Integer leadId, @PathVariable Integer developerId) {
+    public ResponseEntity<byte[]> exportDeveloperReports(@PathVariable Long leadId, @PathVariable Long developerId) {
         List<Report> reports = reportService.getReportsByDeveloper(developerId, leadId);
         ByteArrayInputStream stream = excelService.exportReports(reports);
         return ResponseEntity
@@ -64,7 +64,7 @@ public class ReportController {
 
     @PutMapping("/status/{id}")
     public Report updateStatus(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @RequestParam String status,
             @RequestParam(required = false) String reason,
             Authentication auth) {
@@ -74,21 +74,21 @@ public class ReportController {
 
     @GetMapping("/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
-            @PathVariable Integer developerId,
-            @RequestParam Integer monthId,
+            @PathVariable Long developerId,
+            @RequestParam Long monthId,
             Authentication auth) {
         String email = auth.getName();
         User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
 
         return reportService.getReportsByDeveloperAndMonth(
                 developerId,
-                lead.getId().intValue(),
+                lead.getId(),
                 monthId
         );
     }
 
     @GetMapping("/export/lead/{leadId}")
-    public ResponseEntity<byte[]> exportAllReports(@PathVariable Integer leadId) {
+    public ResponseEntity<byte[]> exportAllReports(@PathVariable Long leadId) {
         List<Report> reports = reportService.getAllReportsByLead(leadId);
         ByteArrayInputStream stream = excelService.exportReports(reports);
         return ResponseEntity.ok()
