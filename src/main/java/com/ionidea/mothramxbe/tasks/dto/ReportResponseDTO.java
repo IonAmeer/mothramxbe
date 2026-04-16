@@ -45,10 +45,10 @@ public class ReportResponseDTO {
 
         ReportResponseDTO dto = new ReportResponseDTO();
 
-        dto.setReportId(report.getId());
+        dto.setReportId(report.getId().intValue());
         dto.setDeveloperName(report.getUser() != null ? report.getUser().getName() : "");
         dto.setStatus(report.getStatus());
-        dto.setMonthId(report.getRefMonthId());
+        dto.setMonthId(report.getRefMonthId().intValue());
         dto.setApprovedBy(report.getApprovedBy());
 
         // ---- tasks ----

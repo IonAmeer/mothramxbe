@@ -63,7 +63,7 @@ public class TeamTaskController {
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        return reportService.getReportsForLead(lead.getId().intValue(), monthId);
+        return reportService.getReportsForLead(lead.getId().longValue(), monthId.longValue());
     }
 
     @PutMapping("/reports/status/{id}")
@@ -72,7 +72,7 @@ public class TeamTaskController {
                                @RequestParam(required = false) String reason,
                                Authentication auth) {
 
-        return reportService.updateStatus(id, status, auth.getName(), "LEAD", reason);
+        return reportService.updateStatus(id.longValue(), status, auth.getName(), "LEAD", reason);
     }
 
     @GetMapping("/reports/developer/{developerId}")
@@ -86,9 +86,9 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         return reportService.getReportsByDeveloperAndMonth(
-                developerId,
-                lead.getId().intValue(),
-                monthId
+                developerId.longValue(),
+                lead.getId().longValue(),
+                monthId.longValue()
         );
     }
 
@@ -104,7 +104,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getReportsByDeveloper(developerId, lead.getId().intValue());
+                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
@@ -121,7 +121,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getAllReportsByLead(lead.getId().intValue());
+                reportService.getAllReportsByLead(lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
