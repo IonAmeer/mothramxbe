@@ -1,7 +1,6 @@
 package com.ionidea.mothramxbe.security.controller;
 
-import com.ionidea.mothramxbe.security.dto.UserRequestDTO;
-import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +16,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-@PreAuthorize("hasAuthority('TEAM_TASKS_CREATE')")
-public class UserController { // all controllers must return dto
+@PreAuthorize("hasAuthority('AUTH_ADMIN')")
+public class UserController {
 
     private final UserService userService;
 
@@ -27,22 +26,22 @@ public class UserController { // all controllers must return dto
     }
 
     @PostMapping
-    public User createUser(@RequestBody UserRequestDTO dto) {
+    public UserDTO createUser(@RequestBody UserDTO dto) {
         return userService.createUser(dto);
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/leads")
-    public List<User> getLeads() {
+    public List<UserDTO> getLeads() {
         return userService.getLeads();
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody UserRequestDTO dto) {
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
         return userService.updateUser(id, dto);
     }
 

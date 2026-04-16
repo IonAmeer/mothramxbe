@@ -60,13 +60,13 @@ public class TeamTaskController {
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports")
     public List<Report> getReportsForLead(Authentication auth,
-                                          @RequestParam Integer monthId) {
+                                          @RequestParam Long refMonthId) {
 
         String email = auth.getName();
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        return reportService.getReportsForLead(lead.getId().longValue(), monthId.longValue());
+        return reportService.getReportsForLead(lead.getId(), refMonthId);
     }
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")

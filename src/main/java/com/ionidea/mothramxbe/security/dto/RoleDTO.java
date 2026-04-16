@@ -1,5 +1,6 @@
 package com.ionidea.mothramxbe.security.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -15,7 +16,8 @@ public class RoleDTO {
 
     private String name;
 
-    private Set<Long> authorityIds;   // ✅ null = don't update
+    private Set<Long> authorityIds;
 
-    private List<AuthorityDto> authorities; // ✅ response only
+    private List<AuthorityDto> authorities;
+
 }
