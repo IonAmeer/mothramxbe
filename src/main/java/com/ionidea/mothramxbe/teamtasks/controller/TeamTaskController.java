@@ -57,28 +57,28 @@ public class TeamTaskController {
 
     @GetMapping("/reports")
     public List<Report> getReportsForLead(Authentication auth,
-                                          @RequestParam Long monthId) {
+                                          @RequestParam Integer monthId) {
 
         String email = auth.getName();
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        return reportService.getReportsForLead(lead.getId(), monthId);
+        return reportService.getReportsForLead(lead.getId().longValue(), monthId.longValue());
     }
 
     @PutMapping("/reports/status/{id}")
-    public Report updateStatus(@PathVariable Long id,
+    public Report updateStatus(@PathVariable Integer id,
                                @RequestParam String status,
                                @RequestParam(required = false) String reason,
                                Authentication auth) {
 
-        return reportService.updateStatus(id, status, auth.getName(), "LEAD", reason);
+        return reportService.updateStatus(id.longValue(), status, auth.getName(), "LEAD", reason);
     }
 
     @GetMapping("/reports/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
-            @PathVariable Long developerId,
-            @RequestParam Long monthId,
+            @PathVariable Integer developerId,
+            @RequestParam Integer monthId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -86,9 +86,9 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         return reportService.getReportsByDeveloperAndMonth(
-                developerId,
-                lead.getId(),
-                monthId
+                developerId.longValue(),
+                lead.getId().longValue(),
+                monthId.longValue()
         );
     }
 
@@ -96,7 +96,7 @@ public class TeamTaskController {
 
     @GetMapping("/export/developer/{developerId}")
     public ResponseEntity<byte[]> exportDeveloperReports(
-            @PathVariable Long developerId,
+            @PathVariable Integer developerId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -104,7 +104,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getReportsByDeveloper(developerId, lead.getId());
+                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
@@ -121,7 +121,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getAllReportsByLead(lead.getId());
+                reportService.getAllReportsByLead(lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
