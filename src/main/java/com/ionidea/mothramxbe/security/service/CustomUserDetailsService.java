@@ -2,6 +2,8 @@ package com.ionidea.mothramxbe.security.service;
 
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.model.UserRole;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
@@ -28,13 +31,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         List<SimpleGrantedAuthority> grantedAuthorities = new ArrayList<>();
 
-        for (Role role : user.getRoles()) {
+        for (UserRole userRole : user.getUserRoles()) {
+            Role role = userRole.getRole();
             // Add the role itself (e.g. ROLE_ADMIN)
             grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
 
             // Add each authority belonging to this role (e.g. ROLE_CREATE, TASK_READ)
-            role.getAuthorities().forEach(authority ->
-                    grantedAuthorities.add(new SimpleGrantedAuthority(authority.getName()))
+            role.getRoleAuthorities().forEach(ra ->
+                    grantedAuthorities.add(new SimpleGrantedAuthority(ra.getAuthority().getName()))
             );
         }
 

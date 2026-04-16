@@ -1,8 +1,7 @@
 package com.ionidea.mothramxbe.security.service;
 
-import com.ionidea.mothramxbe.security.dto.AuthRequest;
-import com.ionidea.mothramxbe.security.dto.AuthResponseDTO;
-import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.dto.AuthRequestDto;
+import com.ionidea.mothramxbe.security.dto.AuthResponseDto;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
-    public AuthResponseDTO login(AuthRequest request) {
+    public AuthResponseDto login(AuthRequestDto request) {
 
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -44,20 +43,19 @@ public class AuthService {
                 .withZone(ZoneId.systemDefault())
                 .format(Instant.ofEpochMilli(System.currentTimeMillis() + JwtUtil.EXPIRATION_MS));
 
-        List<String> roles = user.getRoles().stream()
-                .map(Role::getName)
+        List<String> roles = user.getUserRoles().stream()
+                .map(ur -> ur.getRole().getName())
                 .collect(Collectors.toList());
 
-        return AuthResponseDTO.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .expiresAt(expiresAt)
-                .expiresInSec(JwtUtil.EXPIRATION_MS / 1000)
-                .userId(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .roles(roles)
-                .build();
+        return new AuthResponseDto()
+                .setToken(token)
+                .setTokenType("Bearer")
+                .setExpiresAt(expiresAt)
+                .setExpiresInSec(JwtUtil.EXPIRATION_MS / 1000)
+                .setUserId(user.getId())
+                .setName(user.getName())
+                .setEmail(user.getEmail())
+                .setRoles(roles);
     }
 
 }
