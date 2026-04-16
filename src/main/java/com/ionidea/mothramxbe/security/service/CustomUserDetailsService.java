@@ -3,6 +3,7 @@ package com.ionidea.mothramxbe.security.service;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.model.UserRole;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
