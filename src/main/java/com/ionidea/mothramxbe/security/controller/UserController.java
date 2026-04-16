@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-@PreAuthorize("hasAuthority('AUTH_ADMIN')")
+@PreAuthorize("hasAuthority('TEAM_TASKS_CREATE')")
 public class UserController { // all controllers must return dto
 
     private final UserService userService;

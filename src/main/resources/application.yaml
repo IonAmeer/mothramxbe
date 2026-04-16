@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/mothramx_db
     username: postgres
-    password: s?Yf9THrm7
+    password: s?w
 
   jpa:
     hibernate:

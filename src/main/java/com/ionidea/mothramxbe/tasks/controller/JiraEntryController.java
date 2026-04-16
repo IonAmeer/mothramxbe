@@ -14,13 +14,13 @@ public class JiraEntryController {
     @Autowired
     private JiraEntryService jiraService;
 
-    @PreAuthorize("hasRole('DEVELOPER')")
+    @PreAuthorize("hasAuthority('TASK_CREATE')")
     @PostMapping
     public JiraEntry save(@RequestBody JiraEntryDTO dto) {
         return jiraService.save(dto);
     }
 
-    @PreAuthorize("hasRole('DEVELOPER')")
+    @PreAuthorize("hasAuthority('TASK_DELETE')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         jiraService.delete(id);

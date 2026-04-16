@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/lead")
 @CrossOrigin("*")
-@PreAuthorize("hasRole('LEAD')")
+
 public class TeamTaskController {
 
     @Autowired
@@ -41,6 +41,7 @@ public class TeamTaskController {
 
     // ================= JIRA =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/jira")
     public List<JiraEntry> getAllJira() {
         return jiraService.getAll();
@@ -48,6 +49,7 @@ public class TeamTaskController {
 
     // ================= LEAVE =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/leave")
     public List<LeaveEntry> getAllLeaves() {
         return leaveService.getAll();
@@ -55,6 +57,7 @@ public class TeamTaskController {
 
     // ================= REPORT =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports")
     public List<Report> getReportsForLead(Authentication auth,
                                           @RequestParam Integer monthId) {
@@ -66,6 +69,7 @@ public class TeamTaskController {
         return reportService.getReportsForLead(lead.getId().longValue(), monthId.longValue());
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
     @PutMapping("/reports/status/{id}")
     public Report updateStatus(@PathVariable Integer id,
                                @RequestParam String status,
@@ -75,6 +79,7 @@ public class TeamTaskController {
         return reportService.updateStatus(id.longValue(), status, auth.getName(), "LEAD", reason);
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
             @PathVariable Integer developerId,
@@ -94,6 +99,7 @@ public class TeamTaskController {
 
     // ================= EXPORT =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/developer/{developerId}")
     public ResponseEntity<byte[]> exportDeveloperReports(
             @PathVariable Integer developerId,
@@ -113,6 +119,7 @@ public class TeamTaskController {
                 .body(stream.readAllBytes());
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/all")
     public ResponseEntity<byte[]> exportAllReports(Authentication auth) {
 
