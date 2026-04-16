@@ -31,4 +31,9 @@ public class Authority {
     @JsonIgnore
     private Set<RoleAuthority> roleAuthorities = new HashSet<>();
 
+    public Authority(Long id,String name){
+        this.id=id;
+        this.name=name;
+    }
+
 }
