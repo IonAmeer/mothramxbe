@@ -1,5 +1,7 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.repository.UserRepository;
 import com.ionidea.mothramxbe.tasks.dto.LeaveEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.model.LeaveType;
@@ -19,6 +21,9 @@ public class LeaveEntryService {
     private LeaveEntryRepository repo;
 
     @Autowired
+    private UserRepository userRepo;
+
+    @Autowired
     private LeaveTypeRepository leaveTypeRepo;
 
     @Autowired
@@ -32,10 +37,14 @@ public class LeaveEntryService {
         le.setDuration(dto.getDuration());
         le.setReason(dto.getReason());
 
-        LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId()).orElse(null);
+        // ✅ LeaveType
+        LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId())
+                .orElseThrow(() -> new RuntimeException("Leave type not found"));
         le.setLeaveType(lt);
 
-        Report r = reportRepo.findById(dto.getReportId()).orElse(null);
+        // ✅ Report
+        Report r = reportRepo.findById(dto.getReportId())
+                .orElseThrow(() -> new RuntimeException("Report not found"));
         le.setReport(r);
 
         return repo.save(le);
@@ -47,6 +56,10 @@ public class LeaveEntryService {
 
     public void delete(Long id) {
         repo.deleteById(id);
+    }
+
+    public List<LeaveEntry> getByReportId(Long reportId) {
+        return repo.findByReportId(reportId);
     }
 
 }

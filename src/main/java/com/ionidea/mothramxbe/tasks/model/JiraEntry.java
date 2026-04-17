@@ -1,7 +1,6 @@
 package com.ionidea.mothramxbe.tasks.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.ionidea.mothramxbe.security.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,11 +27,8 @@ public class JiraEntry {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "report_id")
-    @JsonIgnoreProperties({"jiraEntries", "user"})
+    @JsonIgnoreProperties({"jiraEntries", "leaveEntries"})
     private Report report;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
 
 }

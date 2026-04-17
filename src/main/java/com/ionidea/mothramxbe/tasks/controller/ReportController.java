@@ -31,14 +31,17 @@ public class ReportController {
 
     @PreAuthorize("hasAuthority('TASK_CREATE')")
     @PostMapping
-    public Report save(@RequestBody ReportDTO dto) {
-        return reportService.save(dto);
+    public Report save(@RequestBody ReportDTO dto, Authentication auth) {
+        String email = auth.getName();
+        return reportService.save(dto, email);
     }
 
-    @PreAuthorize("hasAuthority('AUTH_ADMIN')")
-    @GetMapping("/admin")
-    public List<Report> getAllForAdmin() {
-        return reportService.getAllReports();
+    @GetMapping("/current")
+    public Report getOrCreateCurrentReport(Authentication auth) {
+
+        String email = auth.getName();
+
+        return reportService.getOrCreateCurrentReport(email);
     }
 
 }

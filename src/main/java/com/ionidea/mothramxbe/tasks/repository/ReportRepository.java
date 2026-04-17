@@ -4,6 +4,7 @@ import com.ionidea.mothramxbe.tasks.model.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
@@ -14,5 +15,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Long userId, Long leadId, Long refMonthId);
 
     List<Report> findByUser_Lead_Id(Long leadId);
+
+    Optional<Report> findByUserIdAndRefMonthId(Long userId, Long refMonthId);
 
 }

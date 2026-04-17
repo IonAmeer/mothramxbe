@@ -27,7 +27,7 @@ public class LeaveEntry {
 
     @ManyToOne
     @JoinColumn(name = "report_id")
-    @JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"jiraEntries", "leaveEntries"})
     private Report report;
 
 }
