@@ -12,13 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ionidea.mothramxbe.security.constants.AppConstants;
 import com.ionidea.mothramxbe.security.model.Authority;
 import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.model.RoleAuthority;
 import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.model.UserRole;
 import com.ionidea.mothramxbe.security.repository.AuthorityRepository;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -45,7 +44,7 @@ public class SecurityDataLoader implements ApplicationRunner {
         log.info("========== Data Loader Summary ==========");
         log.info("Roles:            {}", rolesCreated ? "CREATED" : "ALREADY EXIST");
         log.info("Authorities:      {}", authoritiesCreated ? "CREATED" : "ALREADY EXIST");
-        log.info("Role-Authorities: {}", roleAuthoritiesCreated ? "ASSIGNED" : "ALREADY ASSIGNED");
+        log.info("RoleDTO-Authorities: {}", roleAuthoritiesCreated ? "ASSIGNED" : "ALREADY ASSIGNED");
         log.info("Users:            {}", usersCreated ? "CREATED — default passwords in use, change them immediately!" : "ALREADY EXIST");
         log.info("==========================================");
     }
@@ -82,15 +81,18 @@ public class SecurityDataLoader implements ApplicationRunner {
             Role role = roleRepository.findByName(entry.getKey())
                     .orElseThrow(() -> new RuntimeException("Role not found: " + entry.getKey()));
 
-            if (role.getAuthorities().isEmpty()) {
-                Set<Authority> authorities = entry.getValue().stream()
-                        .map(name -> authorityRepository.findByName(name)
-                                .orElseThrow(() -> new RuntimeException("Authority not found: " + name)))
-                        .collect(Collectors.toSet());
+            if (role.getRoleAuthorities().isEmpty()) {
+                for (String name : entry.getValue()) {
+                    Authority authority = authorityRepository.findByName(name)
+                            .orElseThrow(() -> new RuntimeException("Authority not found: " + name));
+                    RoleAuthority ra = new RoleAuthority();
+                    ra.setRole(role);
+                    ra.setAuthority(authority);
+                    role.getRoleAuthorities().add(ra);
+                }
 
-                role.setAuthorities(authorities);
                 roleRepository.save(role);
-                log.info("Assigned {} authorities to role: {}", authorities.size(), entry.getKey());
+                log.info("Assigned {} authorities to role: {}", entry.getValue().size(), entry.getKey());
                 created = true;
             }
         }
@@ -104,13 +106,16 @@ public class SecurityDataLoader implements ApplicationRunner {
 
                 Role role = roleRepository
                         .findByName(defaultUser.role())
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + defaultUser.role()));
+                        .orElseThrow(() -> new RuntimeException("RoleDTO not found: " + defaultUser.role()));
 
                 User user = new User();
                 user.setName(defaultUser.name());
                 user.setEmail(defaultUser.email());
                 user.setPassword(passwordEncoder.encode(defaultUser.password()));
-                user.setRoles(Set.of(role));
+                UserRole userRole = new UserRole();
+                userRole.setUser(user);
+                userRole.setRole(role);
+                user.getUserRoles().add(userRole);
 
                 userRepository.save(user);
                 log.info("Seeded user: {} with role: {}", defaultUser.email(), defaultUser.role());

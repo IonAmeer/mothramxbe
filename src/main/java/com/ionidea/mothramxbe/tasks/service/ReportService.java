@@ -3,7 +3,6 @@ package com.ionidea.mothramxbe.tasks.service;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 import com.ionidea.mothramxbe.system.entity.RefMonth;
-//import com.ionidea.mothramxbe.tasks.model.RefMonth;
 import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
 import com.ionidea.mothramxbe.tasks.dto.ReportDTO;
 import com.ionidea.mothramxbe.tasks.model.Report;
@@ -25,7 +24,6 @@ public class ReportService {
     @Autowired
     private ReportRepository reportRepo;
 
-    // ✅ GET REPORTS BY DEVELOPER UNDER A LEAD
     public List<Report> getReportsByDeveloper(Long developerId, Long leadId) {
 
         if (developerId == null || leadId == null) {
@@ -41,14 +39,21 @@ public class ReportService {
         return reports;
     }
 
-    // ✅ SAVE REPORT
     public Report save(ReportDTO dto) {
 
         Report r = new Report();
-//        r.setId(dto.getUserId());
+
+        // ✅ SET USER (you were missing this earlier)
+        User user = userRepo.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        r.setUser(user);
+
+        // ✅ SET STATUS
         r.setStatus(dto.getStatus());
 
-        RefMonth rm = refMonthRepo.findById(dto.getRefMonthId()).orElse(null);
+        // ✅ SET MONTH
+        RefMonth rm = refMonthRepo.findById(dto.getRefMonthId())
+                .orElseThrow(() -> new RuntimeException("Month not found"));
         r.setRefMonth(rm);
 
         return reportRepo.save(r);
@@ -58,13 +63,6 @@ public class ReportService {
         return reportRepo.findAll();
     }
 
-//    // ✅ GET REPORT BY ID
-//    public Report getReportById(Integer id) {
-//        return reportRepo.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Report not found"));
-//    }
-
-    // 🔥 MAIN LEAD API (MOST IMPORTANT)
     public List<Report> getReportsForLead(Long leadId, Long monthId) {
 
         if (leadId == null || monthId == null) {
@@ -74,23 +72,23 @@ public class ReportService {
         return reportRepo.findByUser_Lead_IdAndRefMonthId(leadId, monthId);
     }
 
-    // ✅ APPROVE / REJECT REPORT
     public Report updateStatus(Long id, String status, String approvedBy, String role, String reason) {
 
         Report report = reportRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        // ❗ Only LEAD allowed
         if (!"LEAD".equalsIgnoreCase(role)) {
             throw new RuntimeException("Only Lead can approve/reject reports");
         }
 
-        // ❗ Only if still pending
         if (!"PENDING".equalsIgnoreCase(report.getStatus())) {
             throw new RuntimeException("Report already processed");
         }
 
-        // ❗ Validate status
+        if (!"SUBMITTED".equalsIgnoreCase(report.getStatus())) {
+            throw new RuntimeException("Report already processed");
+        }
+
         if (!"APPROVED".equalsIgnoreCase(status) && !"REJECTED".equalsIgnoreCase(status)) {
             throw new RuntimeException("Invalid status value");
         }
@@ -98,7 +96,6 @@ public class ReportService {
         report.setStatus(status);
         report.setApprovedBy(approvedBy);
 
-        // If rejected → reason is mandatory
         if ("REJECTED".equalsIgnoreCase(status)) {
             if (reason == null || reason.isEmpty()) {
                 throw new RuntimeException("Rejection reason is required");

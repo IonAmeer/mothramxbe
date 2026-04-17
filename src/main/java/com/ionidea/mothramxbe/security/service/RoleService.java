@@ -1,11 +1,16 @@
 package com.ionidea.mothramxbe.security.service;
 
-import org.springframework.stereotype.Service;
-
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
-import com.ionidea.mothramxbe.security.dto.RoleRequestDTO;
-import com.ionidea.mothramxbe.security.model.Authority;
+import com.ionidea.mothramxbe.security.dto.AuthorityDto;
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.model.RoleAuthority;
+import com.ionidea.mothramxbe.security.model.UserRole;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ionidea.mothramxbe.security.model.Authority;
 import com.ionidea.mothramxbe.security.repository.AuthorityRepository;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 
@@ -14,88 +19,131 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class RoleService {
 
     private final RoleRepository roleRepository;
-
     private final AuthorityRepository authorityRepository;
 
-    public RoleService(RoleRepository roleRepository,
-                       AuthorityRepository authorityRepository) {
-        this.roleRepository = roleRepository;
-        this.authorityRepository = authorityRepository;
-    }
-
-    // ✅ CREATE
-    public Role createRole(RoleRequestDTO dto) {
-
-        Set<Authority> authorities = new HashSet<>();
-
-        for (Long id : dto.getAuthorityIds()) {
-            Authority auth = authorityRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", id));
-            authorities.add(auth);
-        }
+    // =========================
+    // CREATE ROLE
+    // =========================
+    @Transactional
+    public RoleDTO createRole(RoleDTO dto) {
 
         Role role = new Role();
         role.setName(dto.getName());
-        role.setAuthorities(authorities);
 
-        return roleRepository.save(role);
+        // ✅ SAFE NULL CHECK
+        if (dto.getAuthorityIds() != null) {
+            for (Long authId : dto.getAuthorityIds()) {
+                Authority auth = authorityRepository.findById(authId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
+
+                RoleAuthority ra = new RoleAuthority();
+                ra.setRole(role);
+                ra.setAuthority(auth);
+
+                role.getRoleAuthorities().add(ra);
+            }
+        }
+
+        Role saved = roleRepository.save(role);
+        return toResponseDTO(saved);
     }
 
-    // ✅ READ
-    public List<Role> getAllRoles() {
-        return roleRepository.findAll();
+    // =========================
+    // GET ALL ROLES
+    // =========================
+    public List<RoleDTO> getAllRoles() {
+        return roleRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
-    // ✅ UPDATE (FIXED)
-    public Role updateRole(Long id, RoleRequestDTO dto) {
+    // =========================
+    // UPDATE ROLE (FIXED)
+    // =========================
+    @Transactional
+    public RoleDTO updateRole(Long id, RoleDTO dto) {
 
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
 
-        Set<Authority> authorities = new HashSet<>();
-
-        for (Long authId : dto.getAuthorityIds()) {
-            Authority auth = authorityRepository.findById(authId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
-            authorities.add(auth);
+        // ✅ Update name ONLY if provided
+        if (dto.getName() != null && !dto.getName().trim().isEmpty()) {
+            role.setName(dto.getName());
         }
 
-        role.setName(dto.getName());
-        role.setAuthorities(authorities);
+        // ✅ Update authorities ONLY if provided
+        if (dto.getAuthorityIds() != null) {
 
-        return roleRepository.save(role);
+            // Step 1: clear existing
+            role.getRoleAuthorities().clear();
+
+            // Step 2: force delete in DB (VERY IMPORTANT)
+            roleRepository.saveAndFlush(role);
+
+            // Step 3: add new authorities (avoid duplicates)
+            for (Long authId : new HashSet<>(dto.getAuthorityIds())) {
+
+                Authority auth = authorityRepository.findById(authId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Authority", "id", authId));
+
+                RoleAuthority ra = new RoleAuthority();
+                ra.setRole(role);
+                ra.setAuthority(auth);
+
+                role.getRoleAuthorities().add(ra);
+            }
+        }
+
+        Role saved = roleRepository.save(role);
+        return toResponseDTO(saved);
     }
-
-    // ✅ DELETE (SAFE VERSION)
-//    public void deleteRole(Long id) {
-//
-//        Role role = roleRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Role not found"));
-//
-//        // 🔥 IMPORTANT: clear relations before delete
-//        role.getAuthorities().clear();
-//
-//        roleRepository.delete(role);
-//    }
-
+    // =========================
+    // DELETE ROLE
+    // =========================
+    @Transactional
     public void deleteRole(Long id) {
 
-        Role role = roleRepository.findById(id)
+        Role role = roleRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
 
-        // 🔥 STEP 1: Remove role from all users
-        if (role.getUsers() != null) {
-            role.getUsers().forEach(user -> user.getRoles().remove(role));
+        // ✅ Remove user-role relations safely
+        if (role.getUserRoles() != null) {
+            for (UserRole ur : new HashSet<>(role.getUserRoles())) {
+                ur.getUser().getUserRoles().remove(ur);
+            }
+            role.getUserRoles().clear();
         }
 
-        // 🔥 STEP 2: Clear role-authority mapping
-        role.getAuthorities().clear();
+        // ✅ Remove role-authority relations
+        role.getRoleAuthorities().clear();
 
-        // 🔥 STEP 3: Delete role
         roleRepository.delete(role);
     }
 
+    // =========================
+    // DTO MAPPER
+    // =========================
+    private RoleDTO toResponseDTO(Role role) {
+
+        List<AuthorityDto> authorities = role.getRoleAuthorities()
+                .stream()
+                .map(ra -> new AuthorityDto(
+                        ra.getAuthority().getId(),
+                        ra.getAuthority().getName()
+                ))
+                .toList();
+
+        return new RoleDTO(
+                role.getId(),
+                role.getName(),
+                null,           // request-only field
+                authorities     // response field
+        );
+    }
 }

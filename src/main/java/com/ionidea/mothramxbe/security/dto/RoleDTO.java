@@ -10,22 +10,14 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class RoleDTO {
 
     private Long id;
 
     private String name;
 
-    private String email;
+    private Set<Long> authorityIds;
 
-    private String password;
-
-    private Set<Long> roleIds;
-
-    private List<RoleDTO> roles;
-
-    private Long leadId;
-
-    private String leadName;
+    private List<AuthorityDto> authorities;
 
 }

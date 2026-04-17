@@ -1,8 +1,8 @@
 package com.ionidea.mothramxbe.security.controller;
 
-import com.ionidea.mothramxbe.security.dto.RoleRequestDTO;
-import com.ionidea.mothramxbe.security.model.Role;
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import com.ionidea.mothramxbe.security.service.RoleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,26 +18,23 @@ import java.util.List;
 @RestController
 @RequestMapping("/roles")
 @PreAuthorize("hasAuthority('AUTH_ADMIN')")
-public class RoleController { // all controllers must return dto
+@RequiredArgsConstructor
+public class RoleController {
 
     private final RoleService roleService;
 
-    public RoleController(RoleService roleService) {
-        this.roleService = roleService;
-    }
-
     @PostMapping
-    public Role createRole(@RequestBody RoleRequestDTO dto) {
+    public RoleDTO createRole(@RequestBody RoleDTO dto) {
         return roleService.createRole(dto);
     }
 
     @GetMapping
-    public List<Role> getAllRoles() {
+    public List<RoleDTO> getAllRoles() {
         return roleService.getAllRoles();
     }
 
     @PutMapping("/{id}")
-    public Role updateRole(@PathVariable Long id, @RequestBody RoleRequestDTO dto) {
+    public RoleDTO updateRole(@PathVariable Long id, @RequestBody RoleDTO dto) {
         return roleService.updateRole(id, dto);
     }
 

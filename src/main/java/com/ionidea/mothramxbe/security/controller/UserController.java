@@ -1,7 +1,6 @@
 package com.ionidea.mothramxbe.security.controller;
 
 import com.ionidea.mothramxbe.security.dto.UserDTO;
-import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @PreAuthorize("hasAuthority('AUTH_ADMIN')")
-public class UserController { // all controllers must return dto
+public class UserController {
 
     private final UserService userService;
 
@@ -28,7 +27,7 @@ public class UserController { // all controllers must return dto
     }
 
     @PostMapping
-    public User createUser(@RequestBody UserDTO dto) {
+    public UserDTO createUser(@RequestBody UserDTO dto) {
         return userService.createUser(dto);
     }
 
@@ -37,9 +36,8 @@ public class UserController { // all controllers must return dto
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
     @GetMapping("/leads")
-    public List<User> getLeads() {
+    public List<UserDTO> getLeads() {
         return userService.getLeads();
     }
 
@@ -50,7 +48,6 @@ public class UserController { // all controllers must return dto
 
         return ResponseEntity.ok(updatedUser);
     }
-
 
     @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable Long id) {

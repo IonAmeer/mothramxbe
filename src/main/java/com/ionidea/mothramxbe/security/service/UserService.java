@@ -1,15 +1,20 @@
 package com.ionidea.mothramxbe.security.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ionidea.mothramxbe.exception.BadRequestException;
 import com.ionidea.mothramxbe.exception.DuplicateResourceException;
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
 import com.ionidea.mothramxbe.security.constants.AppConstants;
+import com.ionidea.mothramxbe.security.dto.AuthorityDto;
+import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.model.UserRole;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 
@@ -20,19 +25,14 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,
-                       RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final RoleRepository roleRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     // 🔹 Check if Developer
     private boolean isDeveloper(Set<Role> roles) {
@@ -42,9 +42,9 @@ public class UserService {
 
     // 🔹 Check if Lead
     private boolean isLead(User user) {
-        return user.getRoles() != null &&
-                user.getRoles().stream()
-                        .anyMatch(role -> role.getName().equals(AppConstants.ROLE_LEAD));
+        return user.getUserRoles() != null &&
+                user.getUserRoles().stream()
+                        .anyMatch(ur -> ur.getRole().getName().equals(AppConstants.ROLE_LEAD));
     }
 
     // 🔹 Get roles from DB
@@ -66,8 +66,18 @@ public class UserService {
         return roles;
     }
 
-    // ✅ CREATE USER
-    public User createUser(UserDTO dto) {
+    // 🔹 Assign roles to user via UserRole join entities
+    private void assignRoles(User user, Set<Role> roles) {
+        for (Role role : roles) {
+            UserRole ur = new UserRole();
+            ur.setUser(user);
+            ur.setRole(role);
+            user.getUserRoles().add(ur);
+        }
+    }
+
+    @Transactional
+    public UserDTO createUser(UserDTO dto) {
 
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateResourceException("User", "email", dto.getEmail());
@@ -80,8 +90,9 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRoles(roles);
+        assignRoles(user, roles);
 
+        // 🔥 RULE: Developer must have Lead
         if (isDeveloper) {
 
             if (dto.getLeadId() == null) {
@@ -101,23 +112,23 @@ public class UserService {
             user.setLead(null);
         }
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        return toResponseDTO(saved);
     }
 
-    // ✅ GET ALL USERS (FIXED)
+    // ✅ GET ALL USERS
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
+        return userRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .toList();
     }
 
-
     // ✅ GET LEADS
-    public List<User> getLeads() {
+    public List<UserDTO> getLeads() {
         return userRepository.findAll()
                 .stream()
                 .filter(this::isLead)
+                .map(this::toResponseDTO)
                 .toList();
     }
 
@@ -143,6 +154,7 @@ public class UserService {
             user.setEmail(dto.getEmail());
         }
 
+        // ✅ Optional password update
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
