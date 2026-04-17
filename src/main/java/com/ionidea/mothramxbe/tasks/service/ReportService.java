@@ -1,5 +1,6 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 import com.ionidea.mothramxbe.system.entity.RefMonth;
 import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
@@ -41,9 +42,18 @@ public class ReportService {
     public Report save(ReportDTO dto) {
 
         Report r = new Report();
+
+        // ✅ SET USER (you were missing this earlier)
+        User user = userRepo.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        r.setUser(user);
+
+        // ✅ SET STATUS
         r.setStatus(dto.getStatus());
 
-        RefMonth rm = refMonthRepo.findById(dto.getRefMonthId()).orElse(null);
+        // ✅ SET MONTH
+        RefMonth rm = refMonthRepo.findById(dto.getRefMonthId())
+                .orElseThrow(() -> new RuntimeException("Month not found"));
         r.setRefMonth(rm);
 
         return reportRepo.save(r);
@@ -72,6 +82,10 @@ public class ReportService {
         }
 
         if (!"PENDING".equalsIgnoreCase(report.getStatus())) {
+            throw new RuntimeException("Report already processed");
+        }
+
+        if (!"SUBMITTED".equalsIgnoreCase(report.getStatus())) {
             throw new RuntimeException("Report already processed");
         }
 

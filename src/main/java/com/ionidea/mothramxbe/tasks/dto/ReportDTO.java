@@ -5,9 +5,12 @@ import lombok.Data;
 @Data
 public class ReportDTO {
 
+    // ---------------- BASIC FIELDS ----------------
     private Long id;
 
     private Long userId;
+
+    private String developerName;
 
     private String status;
 
@@ -16,5 +19,12 @@ public class ReportDTO {
     private String rejectionReason;
 
     private Long refMonthId;
+
+    // ---------------- AGGREGATED FIELDS ----------------
+    private int estimatedDays;
+
+    private int daySpent;
+
+    private int remainingDays;
 
 }

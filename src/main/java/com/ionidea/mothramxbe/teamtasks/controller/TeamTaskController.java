@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/lead")
 @CrossOrigin("*")
-@PreAuthorize("hasRole('LEAD')")
+
 public class TeamTaskController {
 
     @Autowired
@@ -41,6 +41,7 @@ public class TeamTaskController {
 
     // ================= JIRA =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/jira")
     public List<JiraEntry> getAllJira() {
         return jiraService.getAll();
@@ -48,6 +49,7 @@ public class TeamTaskController {
 
     // ================= LEAVE =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/leave")
     public List<LeaveEntry> getAllLeaves() {
         return leaveService.getAll();
@@ -55,17 +57,19 @@ public class TeamTaskController {
 
     // ================= REPORT =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports")
     public List<Report> getReportsForLead(Authentication auth,
-                                          @RequestParam Long monthId) {
+                                          @RequestParam Long refMonthId) {
 
         String email = auth.getName();
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        return reportService.getReportsForLead(lead.getId(), monthId);
+        return reportService.getReportsForLead(lead.getId(), refMonthId);
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
     @PutMapping("/reports/status/{id}")
     public Report updateStatus(@PathVariable Long id,
                                @RequestParam String status,
@@ -75,6 +79,7 @@ public class TeamTaskController {
         return reportService.updateStatus(id, status, auth.getName(), "LEAD", reason);
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
             @PathVariable Long developerId,
@@ -94,9 +99,10 @@ public class TeamTaskController {
 
     // ================= EXPORT =================
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/developer/{developerId}")
     public ResponseEntity<byte[]> exportDeveloperReports(
-            @PathVariable Long developerId,
+            @PathVariable Integer developerId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -104,7 +110,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getReportsByDeveloper(developerId, lead.getId());
+                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
@@ -113,6 +119,7 @@ public class TeamTaskController {
                 .body(stream.readAllBytes());
     }
 
+    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/all")
     public ResponseEntity<byte[]> exportAllReports(Authentication auth) {
 
