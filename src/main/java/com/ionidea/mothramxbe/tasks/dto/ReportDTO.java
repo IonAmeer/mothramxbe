@@ -21,10 +21,10 @@ public class ReportDTO {
     private Long refMonthId;
 
     // ---------------- AGGREGATED FIELDS ----------------
-    private int sp;
+    private int estimatedDays;
 
-    private int taken;
+    private int daySpent;
 
-    private int wd;
+    private int remainingDays;
 
 }

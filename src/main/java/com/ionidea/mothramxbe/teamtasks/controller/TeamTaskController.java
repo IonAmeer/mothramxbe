@@ -71,19 +71,19 @@ public class TeamTaskController {
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
     @PutMapping("/reports/status/{id}")
-    public Report updateStatus(@PathVariable Integer id,
+    public Report updateStatus(@PathVariable Long id,
                                @RequestParam String status,
                                @RequestParam(required = false) String reason,
                                Authentication auth) {
 
-        return reportService.updateStatus(id.longValue(), status, auth.getName(), "LEAD", reason);
+        return reportService.updateStatus(id, status, auth.getName(), "LEAD", reason);
     }
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports/developer/{developerId}")
     public List<Report> getReportsByDeveloper(
-            @PathVariable Integer developerId,
-            @RequestParam Integer monthId,
+            @PathVariable Long developerId,
+            @RequestParam Long monthId,
             Authentication auth) {
 
         String email = auth.getName();
@@ -91,9 +91,9 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         return reportService.getReportsByDeveloperAndMonth(
-                developerId.longValue(),
-                lead.getId().longValue(),
-                monthId.longValue()
+                developerId,
+                lead.getId(),
+                monthId
         );
     }
 
@@ -128,7 +128,7 @@ public class TeamTaskController {
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
         List<Report> reports =
-                reportService.getAllReportsByLead(lead.getId().longValue());
+                reportService.getAllReportsByLead(lead.getId());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
