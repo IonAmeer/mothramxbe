@@ -1,5 +1,7 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.security.model.User;
+import com.ionidea.mothramxbe.security.repository.UserRepository;
 import com.ionidea.mothramxbe.tasks.dto.JiraEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.JiraEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
@@ -7,6 +9,7 @@ import com.ionidea.mothramxbe.tasks.repository.JiraEntryRepository;
 import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -15,6 +18,9 @@ public class JiraEntryService {
 
     @Autowired
     private JiraEntryRepository jiraRepo;
+
+    @Autowired
+    private UserRepository userRepo;
 
     @Autowired
     private ReportRepository reportRepo;
@@ -29,7 +35,9 @@ public class JiraEntryService {
         j.setDaysSpent(dto.getDaysSpent());
         j.setRemaining(dto.getRemaining());
 
-        Report r = reportRepo.findById(dto.getReportId()).orElse(null);
+        // ✅ Get Report
+        Report r = reportRepo.findById(dto.getReportId())
+                .orElseThrow(() -> new RuntimeException("Report not found"));
         j.setReport(r);
 
         return jiraRepo.save(j);
@@ -41,6 +49,10 @@ public class JiraEntryService {
 
     public void delete(Long id) {
         jiraRepo.deleteById(id);
+    }
+
+    public List<JiraEntry> getByReportId( Long reportId) {
+        return jiraRepo.findByReportId(reportId);
     }
 
 }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/jira")
 public class JiraEntryController {
@@ -24,6 +26,12 @@ public class JiraEntryController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         jiraService.delete(id);
+    }
+
+    @PreAuthorize("hasAuthority('TASK_READ')")
+    @GetMapping("/report/{reportId}")
+    public List<JiraEntry> getByReport(@PathVariable Long reportId) {
+        return jiraService.getByReportId(reportId);
     }
 
 }

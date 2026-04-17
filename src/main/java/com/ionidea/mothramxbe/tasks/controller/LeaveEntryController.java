@@ -5,12 +5,9 @@ import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.service.LeaveEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/leave-entries")
@@ -20,14 +17,21 @@ public class LeaveEntryController {
     private LeaveEntryService service;
 
     @PostMapping
-    @PreAuthorize("hasRole('DEVELOPER')")
+    @PreAuthorize("hasAuthority('TASK_CREATE')")
     public LeaveEntry save(@RequestBody LeaveEntryDTO dto) {
         return service.save(dto);
     }
 
+    @PreAuthorize("hasAuthority('TASK_DELETE')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);
+    }
+
+    @PreAuthorize("hasAuthority('TASK_READ')")
+    @GetMapping("/leave/report/{reportId}")
+    public List<LeaveEntry> getByReport(@PathVariable Long reportId) {
+        return service.getByReportId(reportId);
     }
 
 }
