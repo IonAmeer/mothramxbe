@@ -106,7 +106,7 @@ public class ReportService {
         return reportRepo.findAll();
     }
 
-   public List<Report> getReportsForLead(Long leadId, Long monthId) {
+    public List<Report> getReportsForLead(Long leadId, Long monthId) {
 
         if (leadId == null || monthId == null) {
             throw new RuntimeException("LeadId and MonthId are required");
@@ -175,24 +175,6 @@ public class ReportService {
 
     public List<Report> getAllReportsByLead(Long leadId) {
         return reportRepo.findByUser_Lead_Id(leadId);
-    }
-
-
-
-
-       public List<Report> getReportsByDeveloper(Long developerId, Long leadId) {
-
-        if (developerId == null || leadId == null) {
-            throw new RuntimeException("DeveloperId and LeadId are required");
-        }
-
-        List<Report> reports = reportRepo.findByUserIdAndUser_Lead_Id(developerId, leadId);
-
-        if (reports.isEmpty()) {
-            throw new RuntimeException("No reports found for this developer under this lead");
-        }
-
-        return reports;
     }
 
 
