@@ -13,6 +13,8 @@ import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,9 +23,7 @@ import java.util.Set;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
-
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository,
@@ -69,7 +69,6 @@ public class UserService {
     // ✅ CREATE USER
     public User createUser(UserDTO dto) {
 
-        // ✅ Email uniqueness check
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
@@ -83,7 +82,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRoles(roles);
 
-        // 🔥 RULE: Developer must have Lead
         if (isDeveloper) {
 
             if (dto.getLeadId() == null) {
@@ -106,10 +104,14 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ✅ GET ALL USERS
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    // ✅ GET ALL USERS (FIXED)
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
+
 
     // ✅ GET LEADS
     public List<User> getLeads() {
@@ -120,29 +122,43 @@ public class UserService {
     }
 
     // ✅ UPDATE USER
-    public User updateUser(Long id, UserDTO dto) {
+    @Transactional
+    public UserDTO updateUser(Long id, UserDTO dto) {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        // ✅ Email uniqueness check (exclude current user)
-        if (userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
+        // Email uniqueness
+        if (dto.getEmail() != null &&
+                userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
             throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
 
-        Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
-        boolean isDeveloper = isDeveloper(roles);
+        // Update fields
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
 
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setRoles(roles);
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
 
-        // ✅ Optional password update
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
-        // 🔥 RULE: Developer must have Lead
+        // Handle roles
+        boolean isDeveloper;
+
+        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
+            Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
+            user.setRoles(roles);
+            isDeveloper = isDeveloper(roles);
+        } else {
+            isDeveloper = isDeveloper(user.getRoles());
+        }
+
+        // ✅ Handle Lead logic
         if (isDeveloper) {
 
             if (dto.getLeadId() == null) {
@@ -166,7 +182,9 @@ public class UserService {
             user.setLead(null);
         }
 
-        return userRepository.save(user);
+
+        User saved = userRepository.save(user);
+        return toResponseDTO(saved);
     }
 
     // ✅ DELETE USER
@@ -178,4 +196,37 @@ public class UserService {
         userRepository.delete(user);
     }
 
+    // 🔥 DTO CONVERTER (IMPORTANT)
+    private UserDTO toResponseDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+
+        dto.setRoles(
+                user.getRoles().stream()
+                        .map(role -> {
+                            Role r = new Role();
+                            r.setId(role.getId());
+                            r.setName(role.getName());
+                            return r;
+                        })
+                        .collect(java.util.stream.Collectors.toSet())
+        );
+
+
+        dto.setRoleIds(
+                user.getRoles().stream()
+                        .map(Role::getId)
+                        .collect(java.util.stream.Collectors.toSet())
+        );
+
+        if (user.getLead() != null) {
+            dto.setLeadId(user.getLead().getId());
+            dto.setLeadName(user.getLead().getName());
+        }
+
+
+        return dto;
+    }
 }

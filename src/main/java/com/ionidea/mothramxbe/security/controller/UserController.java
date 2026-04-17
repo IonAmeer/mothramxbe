@@ -3,6 +3,7 @@ package com.ionidea.mothramxbe.security.controller;
 import com.ionidea.mothramxbe.security.dto.UserDTO;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,9 +33,10 @@ public class UserController { // all controllers must return dto
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
+
 
     @GetMapping("/leads")
     public List<User> getLeads() {
@@ -42,9 +44,13 @@ public class UserController { // all controllers must return dto
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
-        return userService.updateUser(id, dto);
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
+
+        UserDTO updatedUser = userService.updateUser(id, dto);
+
+        return ResponseEntity.ok(updatedUser);
     }
+
 
     @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable Long id) {
