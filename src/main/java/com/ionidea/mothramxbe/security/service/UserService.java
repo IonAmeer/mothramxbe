@@ -137,44 +137,76 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         // ✅ Email uniqueness check (exclude current user)
-        if (userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
+        if (dto.getEmail() != null &&
+                userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
             throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
 
-        Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
-        boolean isDeveloper = isDeveloper(roles);
+        // ✅ Update basic fields
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
 
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-
-        // orphanRemoval = true will DELETE the old UserRole rows
-        user.getUserRoles().clear();
-        assignRoles(user, roles);
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
 
         // ✅ Optional password update
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
-        // 🔥 RULE: Developer must have Lead
+        // ✅ Handle roles ONLY if provided
+        Set<Role> roles = null;
+        boolean isDeveloper;
+
+        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
+
+            roles = getRolesFromDTO(dto.getRoleIds());
+            isDeveloper = isDeveloper(roles);
+
+            // 🔥 Check if roles actually changed
+            Set<Long> existingRoleIds = user.getUserRoles().stream()
+                    .map(ur -> ur.getRole().getId())
+                    .collect(java.util.stream.Collectors.toSet());
+
+            if (!existingRoleIds.equals(dto.getRoleIds())) {
+                user.getUserRoles().clear();
+                assignRoles(user, roles);
+            }
+
+        } else {
+            // keep existing roles
+            isDeveloper = isDeveloper(
+                    user.getUserRoles().stream()
+                            .map(ur -> ur.getRole())
+                            .collect(java.util.stream.Collectors.toSet())
+            );
+        }
+
+        // ✅ Handle Lead logic (ONLY when needed)
         if (isDeveloper) {
 
-            if (dto.getLeadId() == null) {
-                throw new BadRequestException("Developer must have a Lead assigned");
+            // 🔥 Validate only if role/lead is being updated
+            if (dto.getRoleIds() != null || dto.getLeadId() != null) {
+
+                if (dto.getLeadId() == null) {
+                    throw new BadRequestException("Developer must have a Lead assigned");
+                }
+
+                if (dto.getLeadId().equals(id)) {
+                    throw new BadRequestException("User cannot be their own lead");
+                }
+
+                User lead = userRepository.findById(dto.getLeadId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
+
+                if (!isLead(lead)) {
+                    throw new BadRequestException("Assigned user is not a valid Lead");
+                }
+
+                user.setLead(lead);
             }
-
-            if (dto.getLeadId().equals(id)) {
-                throw new BadRequestException("User cannot be their own lead");
-            }
-
-            User lead = userRepository.findById(dto.getLeadId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
-
-            if (!isLead(lead)) {
-                throw new BadRequestException("Assigned user is not a valid Lead");
-            }
-
-            user.setLead(lead);
 
         } else {
             user.setLead(null);
