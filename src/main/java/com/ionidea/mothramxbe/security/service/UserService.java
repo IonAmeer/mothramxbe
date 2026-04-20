@@ -90,25 +90,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         assignRoles(user, roles);
 
-        if (isDeveloper) {
-
-            if (dto.getLeadId() == null) {
-                throw new BadRequestException("Developer must have a Lead assigned");
-            }
-
-            User lead = userRepository.findById(dto.getLeadId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
-
-            if (!isLead(lead)) {
-                throw new BadRequestException("Assigned user is not a valid Lead");
-            }
-
-            user.setLead(lead);
-
-        } else {
-            user.setLead(null);
-        }
-
         User saved = userRepository.save(user);
         return toResponseDTO(saved);
     }
@@ -116,15 +97,6 @@ public class UserService {
     // ✅ GET ALL USERS
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .toList();
-    }
-
-    // ✅ GET LEADS
-    public List<UserDTO> getLeads() {
-        return userRepository.findAll()
-                .stream()
-                .filter(this::isLead)
                 .map(this::toResponseDTO)
                 .toList();
     }
@@ -184,34 +156,6 @@ public class UserService {
             );
         }
 
-        // ✅ Handle Lead logic (ONLY when needed)
-        if (isDeveloper) {
-
-            // 🔥 Validate only if role/lead is being updated
-            if (dto.getRoleIds() != null || dto.getLeadId() != null) {
-
-                if (dto.getLeadId() == null) {
-                    throw new BadRequestException("Developer must have a Lead assigned");
-                }
-
-                if (dto.getLeadId().equals(id)) {
-                    throw new BadRequestException("User cannot be their own lead");
-                }
-
-                User lead = userRepository.findById(dto.getLeadId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Lead", "id", dto.getLeadId()));
-
-                if (!isLead(lead)) {
-                    throw new BadRequestException("Assigned user is not a valid Lead");
-                }
-
-                user.setLead(lead);
-            }
-
-        } else {
-            user.setLead(null);
-        }
-
         User saved = userRepository.save(user);
         return toResponseDTO(saved);
     }
@@ -242,9 +186,7 @@ public class UserService {
                 user.getEmail(),
                 null,
                 null,
-                roles,
-                user.getLead() != null ? user.getLead().getId() : null,
-                user.getLead() != null ? user.getLead().getName() : null
+                roles
         );
     }
 
