@@ -35,11 +35,6 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/leads")
-    public List<UserDTO> getLeads() {
-        return userService.getLeads();
-    }
-
     @PutMapping("/{id}")
     public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
         return userService.updateUser(id, dto);
