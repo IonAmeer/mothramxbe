@@ -33,7 +33,8 @@ public class ReportService {
             throw new RuntimeException("DeveloperId and LeadId are required");
         }
 
-        List<Report> reports = reportRepo.findByUserIdAndUser_Lead_Id(developerId, leadId);
+//        List<Report> reports = reportRepo.findByUserIdAndUser_Lead_Id(developerId, leadId);
+        List<Report> reports = null;
 
         if (reports.isEmpty()) {
             throw new RuntimeException("No reports found for this developer under this lead");
@@ -112,7 +113,8 @@ public class ReportService {
             throw new RuntimeException("LeadId and MonthId are required");
         }
 
-        return reportRepo.findByUser_Lead_IdAndRefMonthId(leadId, monthId);
+//        return reportRepo.findByUser_Lead_IdAndRefMonthId(leadId, monthId);
+        return null;
     }
 
     public Report updateStatus(Long id, String status, String approvedBy, String role, String reason) {
@@ -154,9 +156,9 @@ public class ReportService {
         Report report = reportRepo.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        if (!report.getUser().getLead().getId().equals(leadId)) {
-            throw new RuntimeException("Access denied");
-        }
+//        if (!report.getUser().getLead().getId().equals(leadId)) {
+//            throw new RuntimeException("Access denied");
+//        }
 
         return report;
     }
@@ -166,15 +168,17 @@ public class ReportService {
             Long leadId,
             Long monthId) {
 
-        return reportRepo.findByUserIdAndUser_Lead_IdAndRefMonthId(
-                developerId,
-                leadId,
-                monthId
-        );
+//        return reportRepo.findByUserIdAndUser_Lead_IdAndRefMonthId(
+//                developerId,
+//                leadId,
+//                monthId
+//        );
+        return null;
     }
 
     public List<Report> getAllReportsByLead(Long leadId) {
-        return reportRepo.findByUser_Lead_Id(leadId);
+//        return reportRepo.findByUser_Lead_Id(leadId);
+        return null;
     }
 
 

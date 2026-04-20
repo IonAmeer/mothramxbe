@@ -8,13 +8,13 @@ import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
-    List<Report> findByUser_Lead_IdAndRefMonthId(Long leadId, Long monthId);
-
-    List<Report> findByUserIdAndUser_Lead_Id(Long userId, Long leadId);
-
-    List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Long userId, Long leadId, Long refMonthId);
-
-    List<Report> findByUser_Lead_Id(Long leadId);
+//    List<Report> findByUser_Lead_IdAndRefMonthId(Long leadId, Long monthId);
+//
+//    List<Report> findByUserIdAndUser_Lead_Id(Long userId, Long leadId);
+//
+//    List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Long userId, Long leadId, Long refMonthId);
+//
+//    List<Report> findByUser_Lead_Id(Long leadId);
 
     Optional<Report> findByUserIdAndRefMonthId(Long userId, Long refMonthId);
 

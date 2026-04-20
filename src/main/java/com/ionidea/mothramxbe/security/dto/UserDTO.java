@@ -1,6 +1,5 @@
 package com.ionidea.mothramxbe.security.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -23,9 +22,5 @@ public class UserDTO {
     private Set<Long> roleIds;
 
     private List<RoleDTO> roles;
-
-    private Long leadId;
-
-    private String leadName;
 
 }
