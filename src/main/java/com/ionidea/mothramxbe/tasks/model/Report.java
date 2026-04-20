@@ -1,10 +1,19 @@
 package com.ionidea.mothramxbe.tasks.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.system.entity.RefMonth;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.*;
 
 import java.util.List;
@@ -20,7 +29,6 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ USER
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({"password", "userRoles", "developers", "lead"})
@@ -35,17 +43,13 @@ public class Report {
     @Column(name = "ref_month_id")
     private Long refMonthId;
 
-    // ✅ OBJECT MAPPING
     @ManyToOne
     @JoinColumn(name = "ref_month_id", insertable = false, updatable = false)
     private RefMonth refMonth;
 
-    // ✅ CHILD TABLES (HIDE FROM RESPONSE)
-    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL)
-    @JsonIgnore   // 🔥 IMPORTANT (avoid huge JSON)
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<JiraEntry> jiraEntries;
 
-    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL)
-    @JsonIgnore   // 🔥 IMPORTANT
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<LeaveEntry> leaveEntries;
 }

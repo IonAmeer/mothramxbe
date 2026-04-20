@@ -62,4 +62,33 @@ public class LeaveEntryService {
         return repo.findByReportId(reportId);
     }
 
+    public LeaveEntry update(Long id, LeaveEntryDTO dto) {
+
+        // 🔥 1. Get existing leave
+        LeaveEntry existing = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Leave not found"));
+
+        // 🔥 2. Update fields
+        existing.setDate(dto.getDate());
+        existing.setDuration(dto.getDuration());
+        existing.setReason(dto.getReason());
+
+        // 🔥 3. Update Leave Type
+        if (dto.getLeaveTypeId() != null) {
+            LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId())
+                    .orElseThrow(() -> new RuntimeException("Leave Type not found"));
+            existing.setLeaveType(lt);
+        }
+
+        // 🔥 4. Update Report (optional but safe)
+        if (dto.getReportId() != null) {
+            Report r = reportRepo.findById(dto.getReportId())
+                    .orElseThrow(() -> new RuntimeException("Report not found"));
+            existing.setReport(r);
+        }
+
+        // 🔥 5. Save
+        return repo.save(existing);
+    }
+
 }

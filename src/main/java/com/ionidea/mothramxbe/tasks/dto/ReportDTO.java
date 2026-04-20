@@ -2,6 +2,8 @@ package com.ionidea.mothramxbe.tasks.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ReportDTO {
 
@@ -26,5 +28,9 @@ public class ReportDTO {
     private int daySpent;
 
     private int remainingDays;
+
+    private List<JiraEntryDTO> jiraEntryDTOS;
+
+    private List<LeaveEntryDTO> leaveEntryDTOS;
 
 }

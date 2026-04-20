@@ -28,4 +28,6 @@ public class LeadTeamController {
     public void delete(@PathVariable Long id) {
         service.removeMapping(id);
     }
+
+
 }

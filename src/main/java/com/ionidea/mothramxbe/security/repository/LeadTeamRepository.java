@@ -23,4 +23,5 @@ public interface LeadTeamRepository extends JpaRepository<LeadTeam, Long> {
 
     // ✅ Delete mapping by developer
     void deleteByDeveloper(User developer);
+    
 }
