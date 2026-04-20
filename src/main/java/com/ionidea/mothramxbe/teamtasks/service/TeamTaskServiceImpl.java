@@ -1,41 +1,59 @@
 package com.ionidea.mothramxbe.teamtasks.service;
 
 import com.ionidea.mothramxbe.tasks.model.Report;
-import com.ionidea.mothramxbe.tasks.service.ReportService;
-import com.ionidea.mothramxbe.teamtasks.dto.TeamTaskDTO;
+import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-public class TeamTaskServiceImpl implements TeamTaskService {
+public class TeamTaskServiceImpl {
 
     @Autowired
-    private ReportService reportService;
+    private ReportRepository reportRepository;
 
-    @Override
-    public List<TeamTaskDTO> getReportsForLead(Long leadId, Long monthId) {
-        List<Report> reports = reportService.getReportsForLead(leadId, monthId);
-        return reports.stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<Report> getReportsForLead(Long leadId, Long monthId) {
+
+        if (leadId == null || monthId == null) {
+            throw new RuntimeException("LeadId and MonthId are required");
+        }
+        return reportRepository.findReportByLead(leadId, monthId);
     }
 
-    @Override
-    public TeamTaskDTO updateStatus(Long reportId, String status, String email, String reason) {
-        Report report = reportService.updateStatus(reportId, status, email, "LEAD", reason);
-        return convertToDTO(report);
-    }
+    public Report updateStatus(Long id, String status, String approvedBy, String role, String reason) {
 
-    // 🔁 Convert Entity → DTO
-    private TeamTaskDTO convertToDTO(Report report) {
-        return new TeamTaskDTO(
-                report.getId(),
-                report.getUser().getName(),
-                report.getStatus(),
-                report.getRefMonthId(),
-                report.getApprovedBy()
-        );
+        Report report = null;
+//                reportRepo.findById(id).orElseThrow(() -> new RuntimeException("Report not found"));
+
+        if (!"LEAD".equalsIgnoreCase(role)) {
+            throw new RuntimeException("Only Lead can approve/reject reports");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(report.getStatus())) {
+            throw new RuntimeException("Report already processed");
+        }
+
+        if (!"SUBMITTED".equalsIgnoreCase(report.getStatus())) {
+            throw new RuntimeException("Report already processed");
+        }
+
+        if (!"APPROVED".equalsIgnoreCase(status) && !"REJECTED".equalsIgnoreCase(status)) {
+            throw new RuntimeException("Invalid status value");
+        }
+
+        report.setStatus(status);
+        report.setApprovedBy(approvedBy);
+
+        if ("REJECTED".equalsIgnoreCase(status)) {
+            if (reason == null || reason.isEmpty()) {
+                throw new RuntimeException("Rejection reason is required");
+            }
+            report.setRejectionReason(reason);
+        }
+
+        return null;
+//                reportRepo.save(report);
     }
 
 }

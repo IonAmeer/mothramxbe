@@ -34,4 +34,10 @@ public class JiraEntryController {
         return jiraService.getByReportId(reportId);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('TASK_UPDATE')")
+    public JiraEntry update(@PathVariable Long id, @RequestBody JiraEntryDTO dto) {
+        return jiraService.update(id, dto);
+    }
+
 }

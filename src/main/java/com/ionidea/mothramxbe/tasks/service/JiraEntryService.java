@@ -51,8 +51,32 @@ public class JiraEntryService {
         jiraRepo.deleteById(id);
     }
 
-    public List<JiraEntry> getByReportId( Long reportId) {
+    public List<JiraEntry> getByReportId(Long reportId) {
         return jiraRepo.findByReportId(reportId);
     }
 
+
+    public JiraEntry update(Long id, JiraEntryDTO dto) {
+
+        // 🔥 1. Get existing record
+        JiraEntry existing = jiraRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Jira Entry not found"));
+
+        // 🔥 2. Update fields
+        existing.setTicketId(dto.getTicketId());
+        existing.setDescription(dto.getDescription());
+        existing.setStoryPoints(dto.getStoryPoints());
+        existing.setDaysSpent(dto.getDaysSpent());
+        existing.setRemaining(dto.getRemaining());
+
+        // 🔥 3. (Optional but safe) update report if needed
+        if (dto.getReportId() != null) {
+            Report r = reportRepo.findById(dto.getReportId())
+                    .orElseThrow(() -> new RuntimeException("Report not found"));
+            existing.setReport(r);
+        }
+
+        // 🔥 4. Save updated object
+        return jiraRepo.save(existing);
+    }
 }
