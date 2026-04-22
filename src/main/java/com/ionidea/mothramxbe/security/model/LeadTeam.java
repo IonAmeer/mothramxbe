@@ -1,20 +1,11 @@
 package com.ionidea.mothramxbe.security.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Table
+@Table(name = "lead_team")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,9 +18,11 @@ public class LeadTeam {
 
     @ManyToOne
     @JoinColumn(name = "lead_id", nullable = false)
+    @JsonIgnoreProperties({"password", "userRoles"})
     private User lead;
 
     @OneToOne
     @JoinColumn(name = "developer_id", nullable = false, unique = true)
+    @JsonIgnoreProperties({"password", "userRoles"})
     private User developer;
 }
