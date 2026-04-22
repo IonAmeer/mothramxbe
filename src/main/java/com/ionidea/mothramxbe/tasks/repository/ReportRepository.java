@@ -2,20 +2,13 @@ package com.ionidea.mothramxbe.tasks.repository;
 
 import com.ionidea.mothramxbe.tasks.model.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
-//    List<Report> findByUser_Lead_IdAndRefMonthId(Long leadId, Long monthId);
-//
-//    List<Report> findByUserIdAndUser_Lead_Id(Long userId, Long leadId);
-//
-//    List<Report> findByUserIdAndUser_Lead_IdAndRefMonthId(Long userId, Long leadId, Long refMonthId);
-//
-//    List<Report> findByUser_Lead_Id(Long leadId);
-
-    Optional<Report> findByUserIdAndRefMonthId(Long userId, Long refMonthId);
+    @NativeQuery(value = "select r.* from reports r join lead_team lt on r.user_id = lt.developer_id where lt.lead_id = :leadId and r.ref_month_id = :monthId")
+    List<Report> findReportByLead(Long leadId, Long monthId);
 
 }

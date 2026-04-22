@@ -1,8 +1,17 @@
 package com.ionidea.mothramxbe.tasks.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
@@ -21,13 +30,13 @@ public class LeaveEntry {
 
     private String reason;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "leave_type_id")
     private LeaveType leaveType;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "report_id")
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"jiraEntries", "leaveEntries"})
+    @JsonIgnore
     private Report report;
 
 }

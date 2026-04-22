@@ -34,4 +34,10 @@ public class LeaveEntryController {
         return service.getByReportId(reportId);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('TASK_UPDATE')")
+    public LeaveEntry update(@PathVariable Long id, @RequestBody LeaveEntryDTO dto) {
+        return service.update(id, dto);
+    }
+
 }

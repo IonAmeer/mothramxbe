@@ -2,13 +2,10 @@ package com.ionidea.mothramxbe.teamtasks.controller;
 
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
-import com.ionidea.mothramxbe.tasks.model.JiraEntry;
-import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
+import com.ionidea.mothramxbe.tasks.dto.ReportDTO;
 import com.ionidea.mothramxbe.tasks.model.Report;
 import com.ionidea.mothramxbe.tasks.service.ExcelExportService;
-import com.ionidea.mothramxbe.tasks.service.JiraEntryService;
-import com.ionidea.mothramxbe.tasks.service.LeaveEntryService;
-import com.ionidea.mothramxbe.tasks.service.ReportService;
+import com.ionidea.mothramxbe.teamtasks.service.TeamTaskServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,54 +16,24 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/lead")
-@CrossOrigin("*")
-
+@RequestMapping("/team-tasks")
 public class TeamTaskController {
-
-    @Autowired
-    private JiraEntryService jiraService;
-
-    @Autowired
-    private LeaveEntryService leaveService;
-
-    @Autowired
-    private ReportService reportService;
 
     @Autowired
     private UserRepository userRepo;
 
     @Autowired
+    private TeamTaskServiceImpl teamTaskService;
+
+    @Autowired
     private ExcelExportService excelService;
-
-    // ================= JIRA =================
-
-    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
-    @GetMapping("/jira")
-    public List<JiraEntry> getAllJira() {
-        return jiraService.getAll();
-    }
-
-    // ================= LEAVE =================
-
-    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
-    @GetMapping("/leave")
-    public List<LeaveEntry> getAllLeaves() {
-        return leaveService.getAll();
-    }
-
-    // ================= REPORT =================
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports")
-    public List<Report> getReportsForLead(Authentication auth,
-                                          @RequestParam Long refMonthId) {
-
+    public List<Report> getReportsForLead(Authentication auth, @RequestParam Long refMonthId) {
         String email = auth.getName();
-        User lead = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Lead not found"));
-
-        return reportService.getReportsForLead(lead.getId(), refMonthId);
+        User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
+        return teamTaskService.getReportsForLead(lead.getId(), refMonthId);
     }
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
@@ -75,30 +42,10 @@ public class TeamTaskController {
                                @RequestParam String status,
                                @RequestParam(required = false) String reason,
                                Authentication auth) {
-
-        return reportService.updateStatus(id, status, auth.getName(), "LEAD", reason);
+        return teamTaskService.updateStatus(id, status, auth.getName(), "LEAD", reason);
     }
 
-    @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
-    @GetMapping("/reports/developer/{developerId}")
-    public List<Report> getReportsByDeveloper(
-            @PathVariable Long developerId,
-            @RequestParam Long monthId,
-            Authentication auth) {
-
-        String email = auth.getName();
-        User lead = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Lead not found"));
-
-        return reportService.getReportsByDeveloperAndMonth(
-                developerId,
-                lead.getId(),
-                monthId
-        );
-    }
-
-    // ================= EXPORT =================
-
+    // Put this in separate package
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/developer/{developerId}")
     public ResponseEntity<byte[]> exportDeveloperReports(
@@ -109,8 +56,8 @@ public class TeamTaskController {
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        List<Report> reports =
-                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
+        List<Report> reports = null;
+//                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
@@ -127,8 +74,8 @@ public class TeamTaskController {
         User lead = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        List<Report> reports =
-                reportService.getAllReportsByLead(lead.getId());
+        List<Report> reports = null;
+//                reportService.getAllReportsByLead(lead.getId());
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
