@@ -46,4 +46,9 @@ public class UserController {
         return "User deleted successfully";
     }
 
+    @GetMapping("/findDevelopersNotInAnyTeam")
+    public List<UserDTO> findDevelopersNotInAnyTeam() {
+        return userService.findDevelopersNotInAnyTeam();
+    }
+
 }

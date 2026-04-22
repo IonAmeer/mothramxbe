@@ -9,18 +9,18 @@ import java.util.Optional;
 
 public interface LeadTeamRepository extends JpaRepository<LeadTeam, Long> {
 
-    // ✅ Check if developer already assigned to a lead
     boolean existsByDeveloper(User developer);
 
-    // ✅ Check if specific lead-developer pair exists
     boolean existsByLeadIdAndDeveloperId(Long leadId, Long developerId);
 
-    // ✅ Get mapping by developer
     Optional<LeadTeam> findByDeveloper(User developer);
 
-    // ✅ Get all developers under a lead
     List<LeadTeam> findByLeadId(Long leadId);
 
-    // ✅ Delete mapping by developer
     void deleteByDeveloper(User developer);
+
+    List<LeadTeam> findAll();
+
+    Optional<LeadTeam> findByLeadIdAndDeveloperId(Long leadId, Long developerId);
+
 }
