@@ -29,8 +29,8 @@ public class ReportDTO {
 
     private int remainingDays;
 
-    private List<JiraEntryDTO> jiraEntryDTOS;
+    private List<JiraEntryDTO> jiraEntries;
 
-    private List<LeaveEntryDTO> leaveEntryDTOS;
+    private List<LeaveEntryDTO> leaveEntries;
 
 }
