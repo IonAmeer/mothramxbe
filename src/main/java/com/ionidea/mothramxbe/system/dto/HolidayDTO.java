@@ -1,11 +1,16 @@
 package com.ionidea.mothramxbe.system.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Data
-public class HolidayRequestDTO {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class HolidayDTO {
+
+    private Long id;
 
     private String holidayName;
 
