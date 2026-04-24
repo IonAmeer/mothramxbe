@@ -1,115 +1,110 @@
 package com.ionidea.mothramxbe.system.service;
 
+import com.ionidea.mothramxbe.exception.BadRequestException;
+import com.ionidea.mothramxbe.exception.DuplicateResourceException;
+import com.ionidea.mothramxbe.system.dto.HolidayDTO;
+
+import com.ionidea.mothramxbe.system.dto.HolidayYearDTO;
+import com.ionidea.mothramxbe.system.entity.Holiday;
+import com.ionidea.mothramxbe.system.entity.HolidayYear;
+import com.ionidea.mothramxbe.system.repository.HolidayRepository;
+import com.ionidea.mothramxbe.system.repository.HolidayYearRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import com.ionidea.mothramxbe.exception.DuplicateResourceException;
-import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
-import com.ionidea.mothramxbe.system.dto.HolidayRequestDTO;
-import com.ionidea.mothramxbe.system.dto.HolidayResponseDTO;
-import com.ionidea.mothramxbe.system.entity.Holiday;
-import com.ionidea.mothramxbe.system.entity.RefMonth;
-import com.ionidea.mothramxbe.system.repository.HolidayRepository;
-import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
-
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class HolidayService {
 
-    private final HolidayRepository holidayRepository;
+    private final HolidayYearRepository holidayYearRepo;
 
-    private final RefMonthRepository monthRepository;
+    private final HolidayRepository holidayRepo;
 
-    public HolidayService(HolidayRepository holidayRepository,
-                          RefMonthRepository monthRepository) {
-        this.holidayRepository = holidayRepository;
-        this.monthRepository = monthRepository;
+    // ✅ 1. LOAD YEAR (AUTO CREATE)
+    public HolidayYearDTO getYear(Integer year) {
+
+        HolidayYear holidayYear = holidayYearRepo.findByYear(year)
+                .orElseThrow(() -> new RuntimeException("Year not found"));
+
+        return mapToDTO(holidayYear);
     }
 
-    // ✅ ADD
-    public HolidayResponseDTO createHoliday(HolidayRequestDTO dto) {
+    // ✅ 2. ADD HOLIDAY
+    public String addHoliday(HolidayDTO dto) {
 
-        Optional<Holiday> existing = holidayRepository
-                .findByYearAndMonth_IdAndDay(dto.getYear(), dto.getMonthId(), dto.getDay());
+        LocalDate date = dto.getHolidayDate();
+        String name = dto.getHolidayName();
 
-        if (existing.isPresent()) {
-            throw new DuplicateResourceException("Holiday already exists for this date");
+        int year = date.getYear();
+
+        HolidayYear holidayYear = holidayYearRepo.findByYear(year)
+                .orElseThrow(() -> new RuntimeException("Year not found"));
+
+        if (holidayYear.isFinalized()) {
+            throw new BadRequestException("Year is finalized. Cannot add holiday");
         }
 
-        RefMonth month = monthRepository.findById(dto.getMonthId())
-                .orElseThrow(() -> new ResourceNotFoundException("Month", "id", dto.getMonthId()));
+        if (holidayRepo.findByHolidayDateAndHolidayYear_Year(date, year).isPresent()) {
+            throw new DuplicateResourceException("Holiday already exists for this date");
+        }
 
         Holiday holiday = new Holiday();
-        holiday.setName(dto.getName());
-        holiday.setDay(dto.getDay());
-        holiday.setYear(dto.getYear());
-        holiday.setMonth(month);
+        holiday.setHolidayName(name);
+        holiday.setHolidayDate(date);
+        holiday.setHolidayYear(holidayYear);
 
-        holidayRepository.save(holiday);
+        holidayRepo.save(holiday);
 
-        return mapToDTO(holiday);
+        return "Holiday added successfully";
     }
 
-    // ✅ UPDATE
-    public HolidayResponseDTO updateHoliday(Long id, HolidayRequestDTO dto) {
+    // ✅ 3. DELETE HOLIDAY
+    public String deleteHoliday(Long id) {
 
-        Holiday holiday = holidayRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Holiday", "id", id));
+        Holiday holiday = holidayRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Holiday not found"));
 
-        Optional<Holiday> existing = holidayRepository
-                .findByYearAndMonth_IdAndDay(dto.getYear(), dto.getMonthId(), dto.getDay());
-
-        if (existing.isPresent() && !existing.get().getId().equals(id)) {
-            throw new DuplicateResourceException("Holiday already exists for this date");
+        if (holiday.getHolidayYear().isFinalized()) {
+            throw new RuntimeException("Year finalized. Cannot delete");
         }
 
-        RefMonth month = monthRepository.findById(dto.getMonthId())
-                .orElseThrow(() -> new ResourceNotFoundException("Month", "id", dto.getMonthId()));
+        holidayRepo.delete(holiday);
 
-        holiday.setName(dto.getName());
-        holiday.setDay(dto.getDay());
-        holiday.setYear(dto.getYear());
-        holiday.setMonth(month);
-
-        holidayRepository.save(holiday);
-
-        return mapToDTO(holiday);
+        return "Holiday deleted successfully";
     }
 
-    // ✅ DELETE
-    public void deleteHoliday(Long id) {
-        Holiday holiday = holidayRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Holiday", "id", id));
+    // ✅ 4. FINALIZE YEAR
+    public String finalizeYear(Integer year) {
 
-        holidayRepository.delete(holiday);
+        HolidayYear holidayYear = holidayYearRepo.findByYear(year)
+                .orElseThrow(() -> new RuntimeException("Year not found"));
+
+        holidayYear.setFinalized(true);
+        holidayYearRepo.save(holidayYear);
+
+        return "Year finalized successfully";
     }
 
-    // ✅ GET ALL
-    public List<HolidayResponseDTO> getAll() {
-        return holidayRepository.findAll()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
+    // ✅ MAPPER
+    private HolidayYearDTO mapToDTO(HolidayYear year) {
 
-    // ✅ GET BY YEAR
-    public List<HolidayResponseDTO> getByYear(int year) {
-        return holidayRepository.findByYear(year)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
+        List<HolidayDTO> holidays = year.getHolidays() == null ? List.of() :
+                year.getHolidays().stream()
+                        .map(h -> new HolidayDTO(
+                                h.getId(),
+                                h.getHolidayName(),
+                                h.getHolidayDate()
+                        ))
+                        .toList();
 
-    private HolidayResponseDTO mapToDTO(Holiday h) {
-        return HolidayResponseDTO.builder()
-                .id(h.getId())
-                .name(h.getName())
-                .day(h.getDay())
-                .year(h.getYear())
-                .month(h.getMonth().getLabel())
-                .build();
+        return new HolidayYearDTO(
+                year.getYear(),
+                year.isFinalized(),
+                holidays
+        );
     }
 
 }
