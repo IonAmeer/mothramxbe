@@ -1,5 +1,6 @@
 package com.ionidea.mothramxbe.security.service;
 
+import com.ionidea.mothramxbe.exception.DuplicateResourceException;
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
 import com.ionidea.mothramxbe.security.dto.LeadTeamResponseDTO;
 import com.ionidea.mothramxbe.security.model.LeadTeam;
@@ -17,6 +18,7 @@ import java.util.List;
 public class LeadTeamService {
 
     private final LeadTeamRepository repo;
+
     private final UserRepository userRepository;
 
     @Transactional
@@ -27,7 +29,7 @@ public class LeadTeamService {
         }
 
         if (repo.existsByLeadIdAndDeveloperId(leadId, developerId)) {
-            throw new RuntimeException("Mapping already exists");
+            throw new DuplicateResourceException("Mapping already exists");
         }
 
         User lead = userRepository.findById(leadId)
@@ -55,7 +57,7 @@ public class LeadTeamService {
         List<LeadTeam> mappings = repo.findByLeadId(leadId);
 
         if (mappings.isEmpty()) {
-            throw new RuntimeException("No developers found for this lead");
+            throw new ResourceNotFoundException("No developers found for this lead or no lead exists for id: " + leadId);
         }
 
         // ✅ Get lead info (same for all)
@@ -119,6 +121,7 @@ public class LeadTeamService {
 
         }).toList();
     }
+
     @Transactional
     public void removeMapping(Long leadId, Long developerId) {
 
@@ -129,4 +132,5 @@ public class LeadTeamService {
 
         repo.delete(mapping);
     }
+
 }
