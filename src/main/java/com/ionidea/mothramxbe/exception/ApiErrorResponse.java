@@ -28,7 +28,13 @@ public class ApiErrorResponse {
 
     private String path;
 
-    /** Field-level validation errors — only populated for MethodArgumentNotValidException */
+    private String exceptionClass;
+
+    private String exceptionMessage;
+
+    /**
+     * Field-level validation errors — only populated for MethodArgumentNotValidException
+     */
     private Map<String, String> fieldErrors;
 
 }
