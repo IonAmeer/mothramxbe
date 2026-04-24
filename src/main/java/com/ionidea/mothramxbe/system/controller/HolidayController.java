@@ -1,6 +1,6 @@
 package com.ionidea.mothramxbe.system.controller;
 
-import com.ionidea.mothramxbe.system.dto.HolidayRequestDTO;
+import com.ionidea.mothramxbe.system.dto.HolidayDTO;
 import com.ionidea.mothramxbe.system.dto.HolidayYearDTO;
 import com.ionidea.mothramxbe.system.service.HolidayService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class HolidayController {
 
     // ✅ ADD HOLIDAY
     @PostMapping("/add")
-    public String addHoliday(@RequestBody HolidayRequestDTO dto) {
+    public String addHoliday(@RequestBody HolidayDTO dto) {
         return service.addHoliday(dto);
     }
 

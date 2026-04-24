@@ -3,7 +3,7 @@ package com.ionidea.mothramxbe.system.service;
 import com.ionidea.mothramxbe.exception.BadRequestException;
 import com.ionidea.mothramxbe.exception.DuplicateResourceException;
 import com.ionidea.mothramxbe.system.dto.HolidayDTO;
-import com.ionidea.mothramxbe.system.dto.HolidayRequestDTO;
+
 import com.ionidea.mothramxbe.system.dto.HolidayYearDTO;
 import com.ionidea.mothramxbe.system.entity.Holiday;
 import com.ionidea.mothramxbe.system.entity.HolidayYear;
@@ -33,7 +33,7 @@ public class HolidayService {
     }
 
     // ✅ 2. ADD HOLIDAY
-    public String addHoliday(HolidayRequestDTO dto) {
+    public String addHoliday(HolidayDTO dto) {
 
         LocalDate date = dto.getHolidayDate();
         String name = dto.getHolidayName();
