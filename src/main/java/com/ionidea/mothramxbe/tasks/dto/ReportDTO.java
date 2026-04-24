@@ -12,6 +12,8 @@ public class ReportDTO {
 
     private Long userId;
 
+    private Long developerId;
+    
     private String developerName;
 
     private String status;

@@ -24,8 +24,7 @@ public class TeamTaskServiceImpl {
             throw new RuntimeException("LeadId and MonthId are required");
         }
 
-        List<Report> reports =
-                reportRepository.findReportByLead(leadId, monthId);
+        List<Report> reports = reportRepository.findReportByLead(leadId, monthId);
 
         return reports.stream()
                 .map(this::mapToDTO)
@@ -67,6 +66,8 @@ public class TeamTaskServiceImpl {
 
         ReportDTO dto = new ReportDTO();
         dto.setId(report.getId());
+
+        dto.setDeveloperId(report.getUser().getId());
 
         if (report.getUser() != null) {
             dto.setUserId(report.getUser().getId());
@@ -170,27 +171,13 @@ public class TeamTaskServiceImpl {
         return dto;
     }
 
-    public List<Report> getReportsEntityByDeveloper(
-            Long developerId,
-            Long leadId
-    ) {
-
-        List<Report> reports =
-                reportRepository.findReportByLead(leadId, null);
-
-        return reports.stream()
-                .filter(r ->
-                        r.getUser() != null &&
-                                r.getUser().getId().equals(developerId)
-                )
-                .toList();
+    public List<Report> getAllReportsEntityByLeadAndMonth(Long leadId, Long monthId) {
+        return reportRepository.findByLeadAndMonth(leadId, monthId);
     }
 
-    public List<Report> getAllReportsEntityByLead(
-            Long leadId
+    public List<Report> getReportsEntityByDeveloperAndMonth(Long developerId, Long leadId, Long monthId
     ) {
-
-        return reportRepository.findReportByLead(leadId, null);
+        return reportRepository.findByDeveloperLeadAndMonth(developerId, leadId, monthId);
     }
 
 }

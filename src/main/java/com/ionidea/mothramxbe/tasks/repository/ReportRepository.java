@@ -2,7 +2,6 @@ package com.ionidea.mothramxbe.tasks.repository;
 
 import com.ionidea.mothramxbe.tasks.model.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +21,32 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                                   @Param("monthId") Long monthId);
 
     @NativeQuery(value = "UPDATE report SET status = :status WHERE id = :id")
-    int updateStatus(@Param("id") Long id,
-                     @Param("status") String status);
+    int save(@Param("id") Long id,
+             @Param("status") String status);
+
+    @Query("""
+                SELECT r
+                FROM Report r
+                JOIN FETCH r.user u
+                JOIN LeadTeam lt ON u.id = lt.developer.id
+                WHERE lt.lead.id = :leadId
+                AND r.refMonthId = :monthId
+            """)
+    List<Report> findByLeadAndMonth(@Param("leadId") Long leadId,
+                                    @Param("monthId") Long monthId);
+
+    @Query("""
+                SELECT r
+                FROM Report r
+                JOIN FETCH r.user u
+                JOIN LeadTeam lt ON u.id = lt.developer.id
+                WHERE lt.lead.id = :leadId
+                AND u.id = :developerId
+                AND r.refMonthId = :monthId
+            """)
+    List<Report> findByDeveloperLeadAndMonth(
+            @Param("developerId") Long developerId,
+            @Param("leadId") Long leadId,
+            @Param("monthId") Long monthId);
 
 }
