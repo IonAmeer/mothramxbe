@@ -1,10 +1,8 @@
 package com.ionidea.mothramxbe.tasks.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.ionidea.mothramxbe.security.model.User;
 import com.ionidea.mothramxbe.system.entity.RefMonth;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -14,12 +12,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "reports")
@@ -29,22 +31,14 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String leadStatus;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @JsonIgnoreProperties({"password", "userRoles", "developers", "lead"})
     private User user;
 
-    private String status;
-
-    private String approvedBy;
-
-    private String rejectionReason;
-
-    @Column(name = "ref_month_id")
-    private Long refMonthId;
-
     @ManyToOne
-    @JoinColumn(name = "ref_month_id", insertable = false, updatable = false)
+    @JoinColumn(name = "ref_month_id")
     private RefMonth refMonth;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -52,4 +46,38 @@ public class Report {
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<LeaveEntry> leaveEntries;
+
+    /**
+     * Total number of working days in the given month.
+     * <p>
+     * This is calculated as:
+     * total days in month - weekends - company holidays.
+     */
+    private Integer totalWorkingDays;
+
+    /**
+     * Number of effective working days available for the user.
+     * <p>
+     * This is calculated as:
+     * totalWorkingDays - total leave days taken by the user.
+     */
+    private Integer effectiveWorkingDays;
+
+    /**
+     * Total number of days logged by the user in Jira.
+     * <p>
+     * This is calculated as:
+     * sum of all daysSpent from associated Jira entries.
+     */
+    private Integer loggedWorkingDays;
+
+    /**
+     * Indicates whether the user submitted leave entries
+     * before logging any Jira work entries.
+     * <p>
+     * true  -> leave entries were submitted first
+     * false -> Jira work entries were submitted first
+     */
+    private Boolean isLeaveSubmittedFirst;
+
 }

@@ -36,9 +36,9 @@ public class TeamTaskServiceImpl {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        if (report.getStatus() != null &&
-                (report.getStatus().equalsIgnoreCase("APPROVED")
-                        || report.getStatus().equalsIgnoreCase("REJECTED"))) {
+        if (report.getLeadStatus() != null &&
+                (report.getLeadStatus().equalsIgnoreCase("APPROVED")
+                        || report.getLeadStatus().equalsIgnoreCase("REJECTED"))) {
             throw new RuntimeException("Report already processed");
         }
 
@@ -47,13 +47,13 @@ public class TeamTaskServiceImpl {
             throw new RuntimeException("Invalid status value");
         }
 
-        report.setStatus(status.toUpperCase());
+        report.setLeadStatus(status.toUpperCase());
 
-        if ("REJECTED".equalsIgnoreCase(status)) {
-            report.setRejectionReason(reason);
-        } else {
-            report.setRejectionReason(null);
-        }
+//        if ("REJECTED".equalsIgnoreCase(status)) {
+//            report.setRejectionReason(reason);
+//        } else {
+//            report.setRejectionReason(null);
+//        }
 
         Report saved = reportRepository.save(report);
 
