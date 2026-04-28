@@ -1,53 +1,43 @@
 package com.ionidea.mothramxbe.system.controller;
 
-import com.ionidea.mothramxbe.system.dto.HolidayRequestDTO;
-import com.ionidea.mothramxbe.system.dto.HolidayResponseDTO;
+import com.ionidea.mothramxbe.system.dto.HolidayDTO;
+import com.ionidea.mothramxbe.system.dto.HolidayYearDTO;
 import com.ionidea.mothramxbe.system.service.HolidayService;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/holidays")
-public class HolidayController { // all controllers must return response entity
+@RequiredArgsConstructor
+@CrossOrigin
+public class HolidayController {
 
     private final HolidayService service;
 
-    public HolidayController(HolidayService service) {
-        this.service = service;
+    // ✅ LOAD YEAR (AUTO CREATE)
+    @GetMapping("/{year}")
+    public HolidayYearDTO getYear(@PathVariable Integer year) {
+        return service.getYear(year);
     }
 
-    @PostMapping
-    public HolidayResponseDTO create(@RequestBody HolidayRequestDTO dto) {
-        return service.createHoliday(dto);
+    // ✅ ADD HOLIDAY
+    @PostMapping("/add")
+    public String addHoliday(@RequestBody HolidayDTO dto) {
+        return service.addHoliday(dto);
     }
 
-    @PutMapping("/{id}")
-    public HolidayResponseDTO update(@PathVariable Long id, @RequestBody HolidayRequestDTO dto) {
-        return service.updateHoliday(id, dto);
+    // ✅ DELETE HOLIDAY
+    @DeleteMapping("/delete/{id}")
+    public String deleteHoliday(@PathVariable Long id) {
+        return service.deleteHoliday(id);
     }
 
-    @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
-        service.deleteHoliday(id);
-        return "Deleted successfully";
-    }
-
-    @GetMapping
-    public List<HolidayResponseDTO> getAll() {
-        return service.getAll();
-    }
-
-    @GetMapping("/year/{year}") // replace with query param
-    public List<HolidayResponseDTO> getByYear(@PathVariable int year) {
-        return service.getByYear(year);
+    // ✅ FINALIZE YEAR
+    @PutMapping("/finalize/{year}")
+    public String finalizeYear(@PathVariable Integer year) {
+        return service.finalizeYear(year);
     }
 
 }

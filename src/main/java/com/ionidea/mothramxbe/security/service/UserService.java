@@ -1,10 +1,5 @@
 package com.ionidea.mothramxbe.security.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.ionidea.mothramxbe.exception.BadRequestException;
 import com.ionidea.mothramxbe.exception.DuplicateResourceException;
 import com.ionidea.mothramxbe.exception.ResourceNotFoundException;
@@ -18,9 +13,15 @@ import com.ionidea.mothramxbe.security.model.UserRole;
 import com.ionidea.mothramxbe.security.repository.RoleRepository;
 import com.ionidea.mothramxbe.security.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,13 +37,6 @@ public class UserService {
     private boolean isDeveloper(Set<Role> roles) {
         return roles.stream()
                 .anyMatch(role -> role.getName().equals(AppConstants.ROLE_DEVELOPER));
-    }
-
-    // 🔹 Check if Lead
-    private boolean isLead(User user) {
-        return user.getUserRoles() != null &&
-                user.getUserRoles().stream()
-                        .anyMatch(ur -> ur.getRole().getName().equals(AppConstants.ROLE_LEAD));
     }
 
     // 🔹 Get roles from DB
@@ -64,7 +58,7 @@ public class UserService {
         return roles;
     }
 
-    // 🔹 Assign roles to user via UserRole join entities
+    // 🔹 Assign roles
     private void assignRoles(User user, Set<Role> roles) {
         for (Role role : roles) {
             UserRole ur = new UserRole();
@@ -74,6 +68,7 @@ public class UserService {
         }
     }
 
+    // ✅ CREATE USER
     @Transactional
     public UserDTO createUser(UserDTO dto) {
 
@@ -82,12 +77,12 @@ public class UserService {
         }
 
         Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
-        boolean isDeveloper = isDeveloper(roles);
 
         User user = new User();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
         assignRoles(user, roles);
 
         User saved = userRepository.save(user);
@@ -108,52 +103,34 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        // ✅ Email uniqueness check (exclude current user)
+        // Email uniqueness
         if (dto.getEmail() != null &&
                 userRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
             throw new DuplicateResourceException("User", "email", dto.getEmail());
         }
 
-        // ✅ Update basic fields
-        if (dto.getName() != null) {
-            user.setName(dto.getName());
-        }
+        // Update fields
+        if (dto.getName() != null) user.setName(dto.getName());
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
 
-        if (dto.getEmail() != null) {
-            user.setEmail(dto.getEmail());
-        }
-
-        // ✅ Optional password update
+        // Password update
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
-        // ✅ Handle roles ONLY if provided
-        Set<Role> roles = null;
-        boolean isDeveloper;
-
+        // Roles update (optional)
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
 
-            roles = getRolesFromDTO(dto.getRoleIds());
-            isDeveloper = isDeveloper(roles);
+            Set<Role> roles = getRolesFromDTO(dto.getRoleIds());
 
-            // 🔥 Check if roles actually changed
             Set<Long> existingRoleIds = user.getUserRoles().stream()
                     .map(ur -> ur.getRole().getId())
-                    .collect(java.util.stream.Collectors.toSet());
+                    .collect(Collectors.toSet());
 
             if (!existingRoleIds.equals(dto.getRoleIds())) {
                 user.getUserRoles().clear();
                 assignRoles(user, roles);
             }
-
-        } else {
-            // keep existing roles
-            isDeveloper = isDeveloper(
-                    user.getUserRoles().stream()
-                            .map(ur -> ur.getRole())
-                            .collect(java.util.stream.Collectors.toSet())
-            );
         }
 
         User saved = userRepository.save(user);
@@ -169,14 +146,26 @@ public class UserService {
         userRepository.delete(user);
     }
 
+    // ✅ CONVERT ENTITY → DTO
     private UserDTO toResponseDTO(User user) {
+
         List<RoleDTO> roles = user.getUserRoles().stream()
                 .map(ur -> {
                     Role role = ur.getRole();
+
                     List<AuthorityDto> authorities = role.getRoleAuthorities().stream()
-                            .map(ra -> new AuthorityDto(ra.getAuthority().getId(), ra.getAuthority().getName()))
+                            .map(ra -> new AuthorityDto(
+                                    ra.getAuthority().getId(),
+                                    ra.getAuthority().getName()
+                            ))
                             .toList();
-                    return new RoleDTO(role.getId(), role.getName(), null, authorities);
+
+                    return new RoleDTO(
+                            role.getId(),
+                            role.getName(),
+                            null,
+                            authorities
+                    );
                 })
                 .toList();
 
@@ -184,10 +173,27 @@ public class UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                null,
+                null,   // 🚀 password hidden
                 null,
                 roles
         );
+    }
+
+    // ✅ GET AVAILABLE (UNASSIGNED) DEVELOPERS
+    public List<UserDTO> findDevelopersNotInAnyTeam() {
+
+        List<User> developers = userRepository.findDevelopersNotInAnyTeam();
+
+        return developers.stream()
+                .map(dev -> new UserDTO(
+                        dev.getId(),
+                        dev.getName(),
+                        dev.getEmail(),
+                        null,   // password ignored
+                        null,
+                        null
+                ))
+                .toList();
     }
 
 }
