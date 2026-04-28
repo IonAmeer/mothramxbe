@@ -1,15 +1,15 @@
 package com.ionidea.mothramxbe.tasks.service;
 
-import com.ionidea.mothramxbe.security.model.User;
-import com.ionidea.mothramxbe.security.repository.UserRepository;
+import com.ionidea.mothramxbe.exception.BadRequestException;
 import com.ionidea.mothramxbe.tasks.dto.JiraEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.JiraEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
 import com.ionidea.mothramxbe.tasks.repository.JiraEntryRepository;
 import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,63 +20,132 @@ public class JiraEntryService {
     private JiraEntryRepository jiraRepo;
 
     @Autowired
-    private UserRepository userRepo;
-
-    @Autowired
     private ReportRepository reportRepo;
 
+    // =========================
+    // CREATE
+    // =========================
+    @Transactional
     public JiraEntry save(JiraEntryDTO dto) {
 
-        JiraEntry j = new JiraEntry();
-
-        j.setTicketId(dto.getTicketId());
-        j.setDescription(dto.getDescription());
-        j.setStoryPoints(dto.getStoryPoints());
-        j.setDaysSpent(dto.getDaysSpent());
-        j.setRemaining(dto.getRemaining());
-
-        // ✅ Get Report
-        Report r = reportRepo.findById(dto.getReportId())
+        Report report = reportRepo.findById(dto.getReportId())
                 .orElseThrow(() -> new RuntimeException("Report not found"));
-        j.setReport(r);
 
-        return jiraRepo.save(j);
+        // ❌ RULE 1: Leaves must be locked
+        if (report.getIsLeaveSubmittedFirst() == null || !report.getIsLeaveSubmittedFirst()) {
+            throw new BadRequestException("Please finalize leaves before adding Jira entries");
+        }
+
+        int updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), null);
+
+        // ✅ Update Report
+        report.setLoggedWorkingDays(updatedLoggedDays);
+        reportRepo.save(report);
+
+        // ✅ Save Jira
+        JiraEntry jira = new JiraEntry();
+        jira.setTicketId(dto.getTicketId());
+        jira.setDescription(dto.getDescription());
+        jira.setStoryPoints(dto.getStoryPoints());
+        jira.setDaysSpent(dto.getDaysSpent());
+        jira.setRemaining(dto.getRemaining());
+        jira.setReport(report);
+
+        return jiraRepo.save(jira);
     }
 
-    public List<JiraEntry> getAll() {
-        return jiraRepo.findAll();
-    }
-
-    public void delete(Long id) {
-        jiraRepo.deleteById(id);
-    }
-
-    public List<JiraEntry> getByReportId(Long reportId) {
-        return jiraRepo.findByReportId(reportId);
-    }
-
-
+    // =========================
+    // UPDATE
+    // =========================
+    @Transactional
     public JiraEntry update(Long id, JiraEntryDTO dto) {
 
-        // 🔥 1. Get existing record
         JiraEntry existing = jiraRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Jira Entry not found"));
+                .orElseThrow(() -> new BadRequestException("Jira Entry not found"));
 
-        // 🔥 2. Update fields
+        Report report = existing.getReport();
+
+        if (report.getIsLeaveSubmittedFirst() == null || !report.getIsLeaveSubmittedFirst()) {
+            throw new BadRequestException("Please finalize leaves before updating Jira entries");
+        }
+
+        int updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), id);
+
+        report.setLoggedWorkingDays(updatedLoggedDays);
+        reportRepo.save(report);
+
         existing.setTicketId(dto.getTicketId());
         existing.setDescription(dto.getDescription());
         existing.setStoryPoints(dto.getStoryPoints());
         existing.setDaysSpent(dto.getDaysSpent());
         existing.setRemaining(dto.getRemaining());
 
-        // 🔥 3. (Optional but safe) update report if needed
-        if (dto.getReportId() != null) {
-            Report r = reportRepo.findById(dto.getReportId())
-                    .orElseThrow(() -> new RuntimeException("Report not found"));
-            existing.setReport(r);
-        }
-
-        // 🔥 4. Save updated object
         return jiraRepo.save(existing);
     }
+
+    // =========================
+    // DELETE
+    // =========================
+    @Transactional
+    public void delete(Long id) {
+
+        JiraEntry existing = jiraRepo.findById(id)
+                .orElseThrow(() -> new BadRequestException("Jira Entry not found"));
+
+        Report report = existing.getReport();
+
+        int currentLogged = report.getLoggedWorkingDays() != null ? report.getLoggedWorkingDays() : 0;
+        int daysToRemove = existing.getDaysSpent() != null ? existing.getDaysSpent().intValue() : 0;
+
+        report.setLoggedWorkingDays(currentLogged - daysToRemove);
+        reportRepo.save(report);
+
+        jiraRepo.deleteById(id);
+    }
+
+    // =========================
+    // GET
+    // =========================
+    public List<JiraEntry> getByReportId(Long reportId) {
+        return jiraRepo.findByReportId(reportId);
+    }
+
+    public List<JiraEntry> getAll() {
+        return jiraRepo.findAll();
+    }
+
+    // =========================
+    // 🔥 CORE LOGIC
+    // =========================
+    private int calculateAndValidate(Report report, Integer newDays, Long excludeId) {
+
+        List<JiraEntry> jiraEntries = jiraRepo.findByReportId(report.getId());
+
+        int total = 0;
+
+        for (JiraEntry j : jiraEntries) {
+
+            if (excludeId != null && j.getId().equals(excludeId)) {
+                continue;
+            }
+
+            total += (j.getDaysSpent() != null) ? j.getDaysSpent() : 0;
+        }
+
+        int newDaysInt = newDays != null ? newDays : 0;
+        int finalTotal = total + newDaysInt;
+
+        int effectiveDays = report.getEffectiveWorkingDays() != null
+                ? report.getEffectiveWorkingDays()
+                : 0;
+
+        if (finalTotal > effectiveDays) {
+            throw new BadRequestException(
+                    "Logged days (" + finalTotal + ") exceed allowed working days (" + effectiveDays + ")"
+            );
+        }
+
+        return finalTotal;
+    }
+
 }

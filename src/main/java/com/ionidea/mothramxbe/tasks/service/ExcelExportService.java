@@ -43,17 +43,17 @@ public class ExcelExportService {
 
                 //cl : 1 report status
                 row.createCell(1).setCellValue(
-                        report.getStatus()
+                        report.getLeadStatus()
                 );
 
                 //cl : 2 month reference
                 row.createCell(2).setCellValue(
-                        report.getRefMonthId()
+                        report.getRefMonth().getId()
                 );
 
                 //cl : 3 approved by
                 row.createCell(3).setCellValue(
-                        report.getApprovedBy() != null ? report.getApprovedBy() : "-"
+                        report.getLeadStatus() != null ? report.getLeadStatus() : "-"
                 );
             }
 

@@ -14,4 +14,7 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
     // ✅ ADD THIS (FIX YOUR ERROR)
     List<Holiday> findByYear(Integer year);
 
+    // ✅ ADD THIS (IMPORTANT)
+    List<Holiday> findByYearAndMonth_Id(Integer year, Long monthId);
+
 }
