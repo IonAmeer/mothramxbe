@@ -30,58 +30,53 @@ public class TeamTaskController {
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/reports")
-    public List<Report> getReportsForLead(Authentication auth, @RequestParam Long refMonthId) {
+    public List<ReportDTO> getReportsForLead(@RequestParam Long monthId,
+                                             Authentication auth) {
+
         String email = auth.getName();
+
         User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
-        return teamTaskService.getReportsForLead(lead.getId(), refMonthId);
+
+        return teamTaskService.getReportsForLead(lead.getId(), monthId);
     }
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
     @PutMapping("/reports/status/{id}")
-    public Report updateStatus(@PathVariable Long id,
-                               @RequestParam String status,
-                               @RequestParam(required = false) String reason,
-                               Authentication auth) {
-        return teamTaskService.updateStatus(id, status, auth.getName(), "LEAD", reason);
+    public ReportDTO updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return teamTaskService.updateStatus(id, status);
     }
 
     // Put this in separate package
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/developer/{developerId}")
-    public ResponseEntity<byte[]> exportDeveloperReports(
-            @PathVariable Integer developerId,
-            Authentication auth) {
+    public ResponseEntity<byte[]> exportDeveloperReports(@PathVariable Long developerId, @RequestParam Long monthId, Authentication auth) {
 
         String email = auth.getName();
-        User lead = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        List<Report> reports = null;
-//                reportService.getReportsByDeveloper(developerId.longValue(), lead.getId().longValue());
+        User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
+
+        List<Report> reports = teamTaskService.getReportsEntityByDeveloperAndMonth(developerId, lead.getId(), monthId);
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=developer_reports.xlsx")
-                .body(stream.readAllBytes());
+        return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=developer_reports.xlsx").body(stream.readAllBytes());
     }
+
+    // ================= EXPORT ALL REPORTS =================
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_READ')")
     @GetMapping("/export/all")
-    public ResponseEntity<byte[]> exportAllReports(Authentication auth) {
+    public ResponseEntity<byte[]> exportAllReports(@RequestParam Long monthId, Authentication auth) {
 
         String email = auth.getName();
-        User lead = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        List<Report> reports = null;
-//                reportService.getAllReportsByLead(lead.getId());
+        User lead = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("Lead not found"));
+
+        List<Report> reports = teamTaskService.getAllReportsEntityByLeadAndMonth(lead.getId(), monthId);
 
         ByteArrayInputStream stream = excelService.exportReports(reports);
 
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=all_reports.xlsx")
-                .body(stream.readAllBytes());
+        return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=all_reports.xlsx").body(stream.readAllBytes());
     }
 
 }

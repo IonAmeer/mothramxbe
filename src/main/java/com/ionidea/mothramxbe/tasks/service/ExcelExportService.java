@@ -1,66 +1,124 @@
 package com.ionidea.mothramxbe.tasks.service;
 
+import com.ionidea.mothramxbe.tasks.model.JiraEntry;
+import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Workbook;
+import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.poi.ss.usermodel.*;
 
 @Service
 public class ExcelExportService {
+
+    private final ReportRepository reportRepository;
+
+    @Autowired
+    public ExcelExportService(ReportRepository reportRepository) {
+        this.reportRepository = reportRepository;
+    }
 
     public ByteArrayInputStream exportReports(List<Report> reports) {
 
         try (Workbook workbook = new XSSFWorkbook()) {
 
-            //sheet name is Reports
             Sheet sheet = workbook.createSheet("Reports");
 
-            //header row index = 0
-            Row header = sheet.createRow(0);
+            int rowIdx = 0;
 
-            //column names
-            header.createCell(0).setCellValue("Developer Name");
-            header.createCell(1).setCellValue("Status");
-            header.createCell(2).setCellValue("Month");
-            header.createCell(3).setCellValue("Approved By");
+            // ===== GROUP BY DEVELOPER =====
+            Map<Long, List<Report>> grouped = reports.stream().collect(Collectors.groupingBy(r -> r.getUser().getId()));
 
-            int rowIdx = 1;
+            // ===== STYLES =====
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            headerStyle.setFont(boldFont);
+            CellStyle wrapStyle = workbook.createCellStyle();
+            wrapStyle.setWrapText(true);
 
-            for (Report report : reports) {
-                //for each report create new row
-                Row row = sheet.createRow(rowIdx++);
+            for (Map.Entry<Long, List<Report>> entry : grouped.entrySet()) {
 
-                //cl : 0 developer name
-                row.createCell(0).setCellValue(
-                        report.getUser().getName()
-                );
+                List<Report> devReports = entry.getValue();
 
-                //cl : 1 report status
-                row.createCell(1).setCellValue(
-                        report.getLeadStatus()
-                );
+                if (devReports == null || devReports.isEmpty()) {
+                    continue;
+                }
 
-                //cl : 2 month reference
-                row.createCell(2).setCellValue(
-                        report.getRefMonth().getId()
-                );
+                String developerName = devReports.get(0).getUser().getName();
 
-                //cl : 3 approved by
-                row.createCell(3).setCellValue(
-                        report.getLeadStatus() != null ? report.getLeadStatus() : "-"
-                );
+                // ===== HEADER =====
+                Row header = sheet.createRow(rowIdx++);
+                String[] cols = {
+                        "Sl No", "Task Name", "Assigned To",
+                        "Estimated", "Days Spent", "Remaining", "Leaves"
+                };
+
+                for (int i = 0; i < cols.length; i++) {
+                    Cell cell = header.createCell(i);
+                    cell.setCellValue(cols[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                int slNo = 1;
+
+                for (Report report : devReports) {
+                    List<JiraEntry> jiraList = report.getJiraEntries() != null ? report.getJiraEntries() : List.of();
+
+                    List<LeaveEntry> leaveList = report.getLeaveEntries() != null ? report.getLeaveEntries() : List.of();
+
+                    int maxRows = Math.max(jiraList.size(), leaveList.size());
+
+                    for (int i = 0; i < maxRows; i++) {
+                        Row row = sheet.createRow(rowIdx++);
+
+                        if (i < jiraList.size()) {
+                            JiraEntry jira = jiraList.get(i);
+
+                            int sp = jira.getStoryPoints() != null ? jira.getStoryPoints() : 0;
+                            int spent = jira.getDaysSpent() != null ? jira.getDaysSpent() : 0;
+                            int remaining = sp - spent;
+
+                            String task = (jira.getTicketId() != null ? jira.getTicketId() : "") + " - " + (jira.getDescription() != null ? jira.getDescription() : "");
+
+                            row.createCell(0).setCellValue(slNo++);
+                            row.createCell(1).setCellValue(task);
+                            row.createCell(2).setCellValue(developerName);
+                            row.createCell(3).setCellValue(sp);
+                            row.createCell(4).setCellValue(spent);
+                            row.createCell(5).setCellValue(remaining);
+
+                        }
+
+                        if (i < leaveList.size()) {
+                            LeaveEntry leave = leaveList.get(i);
+
+                            String leaveText = (leave.getDate() != null ? leave.getDate() : "") + " - " + (leave.getReason() != null ? leave.getReason() : "");
+
+                            Cell leaveCell = row.createCell(6);
+                            leaveCell.setCellValue(leaveText);
+                            leaveCell.setCellStyle(wrapStyle);
+                        }
+                    }
+                }
+                rowIdx++;
             }
 
-            //create output stream to hold excel data in memory
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            // ===== AUTO SIZE =====
+            for (int i = 0; i < 7; i++) {
+                sheet.autoSizeColumn(i);
+            }
 
-            //write workbook content into the output stream
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
 
             return new ByteArrayInputStream(out.toByteArray());
