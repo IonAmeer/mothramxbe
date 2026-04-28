@@ -42,8 +42,8 @@ public class TeamTaskController {
 
     @PreAuthorize("hasAuthority('TEAM_TASKS_UPDATE')")
     @PutMapping("/reports/status/{id}")
-    public ReportDTO updateStatus(@PathVariable Long id, @RequestParam String status, @RequestParam(required = false) String reason) {
-        return teamTaskService.updateStatus(id, status, reason);
+    public ReportDTO updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return teamTaskService.updateStatus(id, status);
     }
 
     // Put this in separate package

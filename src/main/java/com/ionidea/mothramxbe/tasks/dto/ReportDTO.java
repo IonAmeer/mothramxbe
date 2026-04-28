@@ -13,7 +13,7 @@ public class ReportDTO {
     private Long userId;
 
     private Long developerId;
-    
+
     private String developerName;
 
     private String status;
@@ -25,11 +25,11 @@ public class ReportDTO {
     private Long refMonthId;
 
     // ---------------- AGGREGATED FIELDS ----------------
-    private int estimatedDays;
+    private Integer totalWorkingDays;
 
-    private int daySpent;
+    private Integer effectiveWorkingDays;
 
-    private int remainingDays;
+    private Integer loggedWorkingDays;
 
     private List<JiraEntryDTO> jiraEntries;
 

@@ -31,7 +31,7 @@ public class TeamTaskServiceImpl {
                 .toList();
     }
 
-    public ReportDTO updateStatus(Long id, String status, String reason) {
+    public ReportDTO updateStatus(Long id, String status) {
 
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -49,71 +49,61 @@ public class TeamTaskServiceImpl {
 
         report.setLeadStatus(status.toUpperCase());
 
-//        if ("REJECTED".equalsIgnoreCase(status)) {
-//            report.setRejectionReason(reason);
-//        } else {
-//            report.setRejectionReason(null);
-//        }
-
         Report saved = reportRepository.save(report);
 
         return mapToDTO(saved);
     }
 
     // ================= MAPPER =================
-
     private ReportDTO mapToDTO(Report report) {
 
         ReportDTO dto = new ReportDTO();
-        dto.setId(report.getId());
 
-        dto.setDeveloperId(report.getUser().getId());
+        dto.setId(report.getId());
 
         if (report.getUser() != null) {
             dto.setUserId(report.getUser().getId());
+            dto.setDeveloperId(report.getUser().getId());
             dto.setDeveloperName(report.getUser().getName());
         } else {
             dto.setDeveloperName("Unknown");
         }
 
-        dto.setStatus(normalizeStatus(report.getStatus()));
-        dto.setApprovedBy(report.getApprovedBy());
-        dto.setRejectionReason(report.getRejectionReason());
+        dto.setStatus(normalizeStatus(report.getLeadStatus()));
+        dto.setRefMonthId(report.getRefMonth().getId());
 
-        dto.setRefMonthId(report.getRefMonthId());
+        // -------- JIRA --------
+        List<JiraEntryDTO> jiraList = report.getJiraEntries() == null
+                ? List.of()
+                : report.getJiraEntries().stream()
+                .map(this::mapJiraToDTO)
+                .toList();
 
-        // ---------------- JIRA ----------------
-        dto.setJiraEntries(
-                report.getJiraEntries() == null ? List.of()
-                        : report.getJiraEntries().stream()
-                        .map(this::mapJiraToDTO)
-                        .toList()
-        );
+        dto.setJiraEntries(jiraList);
 
-        // ---------------- LEAVES ----------------
-        dto.setLeaveEntries(
-                report.getLeaveEntries() == null ? List.of()
-                        : report.getLeaveEntries().stream()
-                        .map(this::mapLeaveToDTO)
-                        .toList()
-        );
+        // -------- LEAVES --------
+        List<LeaveEntryDTO> leaveList = report.getLeaveEntries() == null
+                ? List.of()
+                : report.getLeaveEntries().stream()
+                .map(this::mapLeaveToDTO)
+                .toList();
 
-        // ---------------- COMPUTED FIELDS ----------------
-        int totalStoryPoints = report.getJiraEntries() == null ? 0 :
-                report.getJiraEntries().stream()
-                        .mapToInt(j -> j.getStoryPoints() == null ? 0 : j.getStoryPoints())
-                        .sum();
+        dto.setLeaveEntries(leaveList);
 
-        dto.setEstimatedDays(totalStoryPoints); // or rename properly in DTO
+        // -------- COMPUTATION --------
+        int totalStoryPoints = jiraList.stream()
+                .mapToInt(j -> j.getStoryPoints() == null ? 0 : j.getStoryPoints())
+                .sum();
 
-        int totalSpent = report.getJiraEntries() == null ? 0 :
-                report.getJiraEntries().stream()
-                        .mapToInt(j -> j.getDaysSpent() == null ? 0 : j.getDaysSpent())
-                        .sum();
+        int totalSpent = jiraList.stream()
+                .mapToInt(j -> j.getDaysSpent() == null ? 0 : j.getDaysSpent())
+                .sum();
 
-        dto.setDaySpent(totalSpent);
+        dto.setEffectiveWorkingDays(totalStoryPoints);
+        dto.setLoggedWorkingDays(totalSpent);
 
-        dto.setRemainingDays(totalStoryPoints - totalSpent);
+        // Optional (if needed)
+        dto.setTotalWorkingDays(totalStoryPoints);
 
         return dto;
     }
