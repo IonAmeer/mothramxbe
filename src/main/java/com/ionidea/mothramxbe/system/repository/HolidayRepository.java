@@ -10,4 +10,7 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
 
     Optional<Holiday> findByHolidayDateAndHolidayYear_Year(LocalDate date, Integer year);
 
+    // ✅ ADD THIS (IMPORTANT)
+    List<Holiday> findByYearAndMonth_Id(Integer year, Long monthId);
+
 }

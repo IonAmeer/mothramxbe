@@ -30,11 +30,11 @@ public class TeamTaskServiceImpl {
             throw new RuntimeException("Only Lead can approve/reject reports");
         }
 
-        if (!"PENDING".equalsIgnoreCase(report.getStatus())) {
+        if (!"PENDING".equalsIgnoreCase(report.getLeadStatus())) {
             throw new RuntimeException("Report already processed");
         }
 
-        if (!"SUBMITTED".equalsIgnoreCase(report.getStatus())) {
+        if (!"SUBMITTED".equalsIgnoreCase(report.getLeadStatus())) {
             throw new RuntimeException("Report already processed");
         }
 
@@ -42,14 +42,13 @@ public class TeamTaskServiceImpl {
             throw new RuntimeException("Invalid status value");
         }
 
-        report.setStatus(status);
-        report.setApprovedBy(approvedBy);
+        report.setLeadStatus(status);
 
         if ("REJECTED".equalsIgnoreCase(status)) {
             if (reason == null || reason.isEmpty()) {
                 throw new RuntimeException("Rejection reason is required");
             }
-            report.setRejectionReason(reason);
+            report.setLeadStatus(status);
         }
 
         return null;
