@@ -159,12 +159,12 @@ public class ReportService {
 
         int workingDays = 0;
 
-        List<Holiday> holidays =
-                holidayRepo.findByYearAndMonth_Id(year, refMonth.getId());
+        List<Holiday> holidays = null;
+//                holidayRepo.findByYearAndMonth_Id(year, refMonth.getId());
 
-        List<Integer> holidayDays = holidays.stream()
-                .map(Holiday::getDay)
-                .collect(Collectors.toList());
+        List<Long> holidayDays = holidays.stream()
+                .map(Holiday::getId)
+                .toList();
 
         for (int i = 1; i <= daysInMonth; i++) {
 
