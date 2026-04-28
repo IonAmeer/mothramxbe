@@ -71,10 +71,6 @@ public class ExcelExportService {
 
                 int slNo = 1;
 
-                double totalSP = 0;
-                double totalSpent = 0;
-                double totalRemaining = 0;
-
                 for (Report report : devReports) {
                     List<JiraEntry> jiraList = report.getJiraEntries() != null ? report.getJiraEntries() : List.of();
 
@@ -101,9 +97,6 @@ public class ExcelExportService {
                             row.createCell(4).setCellValue(spent);
                             row.createCell(5).setCellValue(remaining);
 
-                            totalSP += sp;
-                            totalSpent += spent;
-                            totalRemaining += remaining;
                         }
 
                         if (i < leaveList.size()) {
@@ -117,15 +110,6 @@ public class ExcelExportService {
                         }
                     }
                 }
-
-                // ===== TOTAL ROW =====
-                Row totalRow = sheet.createRow(rowIdx++);
-                totalRow.createCell(2).setCellValue("TOTAL");
-                totalRow.createCell(3).setCellValue(totalSP);
-                totalRow.createCell(4).setCellValue(totalSpent);
-                totalRow.createCell(5).setCellValue(totalRemaining);
-
-                // ===== SPACE BETWEEN DEVELOPERS =====
                 rowIdx++;
             }
 
