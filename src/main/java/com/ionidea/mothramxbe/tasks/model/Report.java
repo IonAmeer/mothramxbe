@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 @Table(name = "reports")
 public class Report {
 
@@ -61,7 +63,7 @@ public class Report {
      * This is calculated as:
      * totalWorkingDays - total leave days taken by the user.
      */
-    private Integer effectiveWorkingDays;
+    private Double effectiveWorkingDays;
 
     /**
      * Total number of days logged by the user in Jira.
@@ -69,7 +71,7 @@ public class Report {
      * This is calculated as:
      * sum of all daysSpent from associated Jira entries.
      */
-    private Integer loggedWorkingDays;
+    private Double loggedWorkingDays;
 
     /**
      * Indicates whether the user submitted leave entries

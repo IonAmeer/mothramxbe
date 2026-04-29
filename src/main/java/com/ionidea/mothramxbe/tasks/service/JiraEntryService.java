@@ -6,12 +6,12 @@ import com.ionidea.mothramxbe.tasks.model.JiraEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
 import com.ionidea.mothramxbe.tasks.repository.JiraEntryRepository;
 import com.ionidea.mothramxbe.tasks.repository.ReportRepository;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class JiraEntryService {
@@ -23,22 +23,39 @@ public class JiraEntryService {
     private ReportRepository reportRepo;
 
     // =========================
+    // 🔥 MAPPER
+    // =========================
+    public static JiraEntryDTO mapToDTO(JiraEntry j) {
+
+        JiraEntryDTO dto = new JiraEntryDTO();
+
+        dto.setId(j.getId());
+        dto.setTicketId(j.getTicketId());
+        dto.setDescription(j.getDescription());
+        dto.setStoryPoints(j.getStoryPoints());
+        dto.setDaysSpent(j.getDaysSpent());
+        dto.setRemaining(j.getRemaining());
+
+        return dto;
+    }
+
+    // =========================
     // CREATE
     // =========================
     @Transactional
-    public JiraEntry save(JiraEntryDTO dto) {
+    public JiraEntryDTO save(JiraEntryDTO dto) {
 
         Report report = reportRepo.findById(dto.getReportId())
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        // ❌ RULE 1: Leaves must be locked
-        if (report.getIsLeaveSubmittedFirst() == null || !report.getIsLeaveSubmittedFirst()) {
+        // ❌ RULE: Leaves must be locked
+        if (!Boolean.TRUE.equals(report.getIsLeaveSubmittedFirst())) {
             throw new BadRequestException("Please finalize leaves before adding Jira entries");
         }
 
-        int updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), null);
+        double updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), null);
 
-        // ✅ Update Report
+        // ✅ Update report
         report.setLoggedWorkingDays(updatedLoggedDays);
         reportRepo.save(report);
 
@@ -51,25 +68,27 @@ public class JiraEntryService {
         jira.setRemaining(dto.getRemaining());
         jira.setReport(report);
 
-        return jiraRepo.save(jira);
+        JiraEntry saved = jiraRepo.save(jira);
+
+        return mapToDTO(saved);
     }
 
     // =========================
     // UPDATE
     // =========================
     @Transactional
-    public JiraEntry update(Long id, JiraEntryDTO dto) {
+    public JiraEntryDTO update(Long id, JiraEntryDTO dto) {
 
         JiraEntry existing = jiraRepo.findById(id)
                 .orElseThrow(() -> new BadRequestException("Jira Entry not found"));
 
         Report report = existing.getReport();
 
-        if (report.getIsLeaveSubmittedFirst() == null || !report.getIsLeaveSubmittedFirst()) {
+        if (!Boolean.TRUE.equals(report.getIsLeaveSubmittedFirst())) {
             throw new BadRequestException("Please finalize leaves before updating Jira entries");
         }
 
-        int updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), id);
+        double updatedLoggedDays = calculateAndValidate(report, dto.getDaysSpent(), id);
 
         report.setLoggedWorkingDays(updatedLoggedDays);
         reportRepo.save(report);
@@ -80,7 +99,9 @@ public class JiraEntryService {
         existing.setDaysSpent(dto.getDaysSpent());
         existing.setRemaining(dto.getRemaining());
 
-        return jiraRepo.save(existing);
+        JiraEntry updated = jiraRepo.save(existing);
+
+        return mapToDTO(updated);
     }
 
     // =========================
@@ -94,8 +115,8 @@ public class JiraEntryService {
 
         Report report = existing.getReport();
 
-        int currentLogged = report.getLoggedWorkingDays() != null ? report.getLoggedWorkingDays() : 0;
-        int daysToRemove = existing.getDaysSpent() != null ? existing.getDaysSpent().intValue() : 0;
+        double currentLogged = report.getLoggedWorkingDays() != null ? report.getLoggedWorkingDays() : 0;
+        int daysToRemove = existing.getDaysSpent() != null ? existing.getDaysSpent() : 0;
 
         report.setLoggedWorkingDays(currentLogged - daysToRemove);
         reportRepo.save(report);
@@ -106,16 +127,15 @@ public class JiraEntryService {
     // =========================
     // GET
     // =========================
-    public List<JiraEntry> getByReportId(Long reportId) {
-        return jiraRepo.findByReportId(reportId);
-    }
-
-    public List<JiraEntry> getAll() {
-        return jiraRepo.findAll();
+    public List<JiraEntryDTO> getByReportId(Long reportId) {
+        return jiraRepo.findByReportId(reportId)
+                .stream()
+                .map(JiraEntryService::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     // =========================
-    // 🔥 CORE LOGIC
+    // 🔥 CORE VALIDATION
     // =========================
     private int calculateAndValidate(Report report, Integer newDays, Long excludeId) {
 
@@ -135,7 +155,7 @@ public class JiraEntryService {
         int newDaysInt = newDays != null ? newDays : 0;
         int finalTotal = total + newDaysInt;
 
-        int effectiveDays = report.getEffectiveWorkingDays() != null
+        double effectiveDays = report.getEffectiveWorkingDays() != null
                 ? report.getEffectiveWorkingDays()
                 : 0;
 

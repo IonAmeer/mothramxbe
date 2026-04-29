@@ -18,7 +18,7 @@ public class LeaveEntryController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('TASK_CREATE')")
-    public LeaveEntry save(@RequestBody LeaveEntryDTO dto) {
+    public LeaveEntryDTO save(@RequestBody LeaveEntryDTO dto) {
         return service.save(dto);
     }
 
@@ -30,13 +30,13 @@ public class LeaveEntryController {
 
     @PreAuthorize("hasAuthority('TASK_READ')")
     @GetMapping("/leave/report/{reportId}")
-    public List<LeaveEntry> getByReport(@PathVariable Long reportId) {
+    public List<LeaveEntryDTO> getByReport(@PathVariable Long reportId) {
         return service.getByReportId(reportId);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('TASK_UPDATE')")
-    public LeaveEntry update(@PathVariable Long id, @RequestBody LeaveEntryDTO dto) {
+    public LeaveEntryDTO update(@PathVariable Long id, @RequestBody LeaveEntryDTO dto) {
         return service.update(id, dto);
     }
 
