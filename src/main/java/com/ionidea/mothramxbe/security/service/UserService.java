@@ -143,7 +143,11 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        userRepository.delete(user);
+        try {
+            userRepository.delete(user);
+        } catch (Exception ex) {
+            throw new BadRequestException("Delete failed As User is assigned to a team.");
+        }
     }
 
     // ✅ CONVERT ENTITY → DTO
