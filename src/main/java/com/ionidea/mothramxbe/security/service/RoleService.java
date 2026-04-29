@@ -6,6 +6,7 @@ import com.ionidea.mothramxbe.security.dto.RoleDTO;
 import com.ionidea.mothramxbe.security.model.Role;
 import com.ionidea.mothramxbe.security.model.RoleAuthority;
 import com.ionidea.mothramxbe.security.model.UserRole;
+import com.ionidea.mothramxbe.security.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,10 @@ import java.util.Set;
 public class RoleService {
 
     private final RoleRepository roleRepository;
+
     private final AuthorityRepository authorityRepository;
+
+    private final UserRoleRepository userRoleRepository;
 
     // =========================
     // CREATE ROLE
@@ -102,6 +106,7 @@ public class RoleService {
         Role saved = roleRepository.save(role);
         return toResponseDTO(saved);
     }
+
     // =========================
     // DELETE ROLE
     // =========================
@@ -112,17 +117,13 @@ public class RoleService {
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
 
-        // ✅ Remove user-role relations safely
-        if (role.getUserRoles() != null) {
-            for (UserRole ur : new HashSet<>(role.getUserRoles())) {
-                ur.getUser().getUserRoles().remove(ur);
-            }
-            role.getUserRoles().clear();
-        }
+        // ✅ DELETE FROM user_roles TABLE (CRITICAL FIX)
+        userRoleRepository.deleteByRole(role);
 
         // ✅ Remove role-authority relations
         role.getRoleAuthorities().clear();
 
+        // ✅ Delete role
         roleRepository.delete(role);
     }
 
@@ -146,4 +147,5 @@ public class RoleService {
                 authorities     // response field
         );
     }
+
 }
