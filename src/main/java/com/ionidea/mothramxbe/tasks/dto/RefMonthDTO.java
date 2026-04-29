@@ -1,8 +1,13 @@
 package com.ionidea.mothramxbe.tasks.dto;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.Accessors;
 
-@Data
+@Getter
+@Setter
+@Accessors(chain = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class RefMonthDTO {
 
     private Long id;

@@ -11,6 +11,6 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
 
     Optional<Holiday> findByHolidayDateAndHolidayYear_Year(LocalDate date, Integer year);
 
-//    List<Holiday> findByYearAndMonth_Id(Integer year, Long monthId);
+    List<Holiday> findByHolidayDateBetween(LocalDate start, LocalDate end);
 
 }

@@ -1,7 +1,5 @@
 package com.ionidea.mothramxbe.tasks.service;
 
-import com.ionidea.mothramxbe.security.model.User;
-import com.ionidea.mothramxbe.security.repository.UserRepository;
 import com.ionidea.mothramxbe.tasks.dto.LeaveEntryDTO;
 import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.model.LeaveType;
@@ -13,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LeaveEntryService {
@@ -21,15 +20,35 @@ public class LeaveEntryService {
     private LeaveEntryRepository repo;
 
     @Autowired
-    private UserRepository userRepo;
-
-    @Autowired
     private LeaveTypeRepository leaveTypeRepo;
 
     @Autowired
     private ReportRepository reportRepo;
 
-    public LeaveEntry save(LeaveEntryDTO dto) {
+    // =========================
+    // 🔥 MAPPER
+    // =========================
+    public static LeaveEntryDTO mapToDTO(LeaveEntry le) {
+
+        LeaveEntryDTO dto = new LeaveEntryDTO();
+
+        dto.setId(le.getId());
+        dto.setDate(le.getDate());
+        dto.setDuration(le.getDuration());
+        dto.setReason(le.getReason());
+        dto.setLeaveTypeId(le.getLeaveType().getId());
+
+        if (le.getLeaveType() != null) {
+            dto.setLeaveType(le.getLeaveType().getName());
+        }
+
+        return dto;
+    }
+
+    // =========================
+    // CREATE
+    // =========================
+    public LeaveEntryDTO save(LeaveEntryDTO dto) {
 
         LeaveEntry le = new LeaveEntry();
 
@@ -37,58 +56,73 @@ public class LeaveEntryService {
         le.setDuration(dto.getDuration());
         le.setReason(dto.getReason());
 
-        // ✅ LeaveType
         LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId())
                 .orElseThrow(() -> new RuntimeException("Leave type not found"));
         le.setLeaveType(lt);
 
-        // ✅ Report
         Report r = reportRepo.findById(dto.getReportId())
                 .orElseThrow(() -> new RuntimeException("Report not found"));
         le.setReport(r);
 
-        return repo.save(le);
+        LeaveEntry saved = repo.save(le);
+
+        return mapToDTO(saved);
     }
 
-    public List<LeaveEntry> getAll() {
-        return repo.findAll();
+    // =========================
+    // GET ALL
+    // =========================
+    public List<LeaveEntryDTO> getAll() {
+        return repo.findAll()
+                .stream()
+                .map(LeaveEntryService::mapToDTO)
+                .collect(Collectors.toList());
     }
 
+    // =========================
+    // GET BY REPORT
+    // =========================
+    public List<LeaveEntryDTO> getByReportId(Long reportId) {
+        return repo.findByReportId(reportId)
+                .stream()
+                .map(LeaveEntryService::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // =========================
+    // DELETE
+    // =========================
     public void delete(Long id) {
         repo.deleteById(id);
     }
 
-    public List<LeaveEntry> getByReportId(Long reportId) {
-        return repo.findByReportId(reportId);
-    }
+    // =========================
+    // UPDATE
+    // =========================
+    public LeaveEntryDTO update(Long id, LeaveEntryDTO dto) {
 
-    public LeaveEntry update(Long id, LeaveEntryDTO dto) {
-
-        // 🔥 1. Get existing leave
         LeaveEntry existing = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
 
-        // 🔥 2. Update fields
         existing.setDate(dto.getDate());
         existing.setDuration(dto.getDuration());
         existing.setReason(dto.getReason());
 
-        // 🔥 3. Update Leave Type
         if (dto.getLeaveTypeId() != null) {
             LeaveType lt = leaveTypeRepo.findById(dto.getLeaveTypeId())
                     .orElseThrow(() -> new RuntimeException("Leave Type not found"));
             existing.setLeaveType(lt);
         }
 
-        // 🔥 4. Update Report (optional but safe)
         if (dto.getReportId() != null) {
             Report r = reportRepo.findById(dto.getReportId())
                     .orElseThrow(() -> new RuntimeException("Report not found"));
             existing.setReport(r);
         }
 
-        // 🔥 5. Save
-        return repo.save(existing);
+        LeaveEntry updated = repo.save(existing);
+
+        return mapToDTO(updated);
     }
 
 }

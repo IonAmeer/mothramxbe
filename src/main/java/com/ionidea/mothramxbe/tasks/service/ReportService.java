@@ -6,6 +6,8 @@ import com.ionidea.mothramxbe.system.entity.Holiday;
 import com.ionidea.mothramxbe.system.entity.RefMonth;
 import com.ionidea.mothramxbe.system.repository.HolidayRepository;
 import com.ionidea.mothramxbe.system.repository.RefMonthRepository;
+import com.ionidea.mothramxbe.tasks.dto.JiraEntryDTO;
+import com.ionidea.mothramxbe.tasks.dto.LeaveEntryDTO;
 import com.ionidea.mothramxbe.tasks.dto.ReportResponseDTO;
 import com.ionidea.mothramxbe.tasks.model.LeaveEntry;
 import com.ionidea.mothramxbe.tasks.model.Report;
@@ -70,11 +72,11 @@ public class ReportService {
             }
 
             if (report.getEffectiveWorkingDays() == null) {
-                report.setEffectiveWorkingDays(0);
+                report.setEffectiveWorkingDays(0.0);
             }
 
             if (report.getLoggedWorkingDays() == null) {
-                report.setLoggedWorkingDays(0);
+                report.setLoggedWorkingDays(0.0);
             }
 
             // ✅ SAVE only if something was null (safe to always save too)
@@ -92,8 +94,8 @@ public class ReportService {
         report.setTotalWorkingDays(totalWorkingDays);
 
         // ✅ DEFAULT VALUES (IMPORTANT)
-        report.setEffectiveWorkingDays(0);
-        report.setLoggedWorkingDays(0);
+        report.setEffectiveWorkingDays(0.0);
+        report.setLoggedWorkingDays(0.0);
         report.setIsLeaveSubmittedFirst(false);
 
         return reportRepo.save(report);
@@ -112,12 +114,12 @@ public class ReportService {
 
         int totalWorkingDays = report.getTotalWorkingDays();
 
-        // 🔥 CALCULATE LEAVE DAYS FROM duration
-        int leaveDays = report.getLeaveEntries().stream()
-                .mapToInt(this::convertLeaveToDays)
+        // 🔥 FIX: use mapToDouble
+        double leaveDays = report.getLeaveEntries().stream()
+                .mapToDouble(this::convertLeaveToDays)
                 .sum();
 
-        int effectiveWorkingDays = totalWorkingDays - leaveDays;
+        double effectiveWorkingDays = totalWorkingDays - leaveDays;
 
         report.setEffectiveWorkingDays(effectiveWorkingDays);
 
@@ -130,16 +132,16 @@ public class ReportService {
     // =========================
     // CONVERT LEAVE TO DAYS
     // =========================
-    private int convertLeaveToDays(LeaveEntry leave) {
+    private double convertLeaveToDays(LeaveEntry leave) {
 
         if (leave.getDuration() == null) return 0;
 
         switch (leave.getDuration().toUpperCase()) {
             case "FULL_DAY":
-                return 1;
+                return 1.0;
 
             case "HALF_DAY":
-                return 1; // ⚠️ simplified (you can change later)
+                return 0.5; // ⚠️ simplified (you can change later)
 
             default:
                 return 0;
@@ -159,22 +161,25 @@ public class ReportService {
 
         int workingDays = 0;
 
-        List<Holiday> holidays = null;
-//                holidayRepo.findByYearAndMonth_Id(year, refMonth.getId());
+        // ✅ NEW OPTIMIZED QUERY
+        LocalDate end = start.withDayOfMonth(daysInMonth);
+        List<Holiday> holidays = holidayRepo.findByHolidayDateBetween(start, end);
 
-        List<Long> holidayDays = holidays.stream()
-                .map(Holiday::getId)
+        List<Integer> holidayDays = holidays.stream()
+                .map(h -> h.getHolidayDate().getDayOfMonth())
                 .toList();
 
         for (int i = 1; i <= daysInMonth; i++) {
 
             LocalDate date = LocalDate.of(year, monthValue, i);
 
+            // ❌ Skip weekends
             if (date.getDayOfWeek() == DayOfWeek.SATURDAY ||
                     date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 continue;
             }
 
+            // ❌ Skip holidays
             if (holidayDays.contains(i)) {
                 continue;
             }
@@ -258,16 +263,17 @@ public class ReportService {
         dto.setYear(report.getRefMonth().getYear());
 
         dto.setStatus(report.getLeadStatus());
-        dto.setLeaveSubmittedFirst(
-                Boolean.TRUE.equals(report.getIsLeaveSubmittedFirst())
-        );
+        dto.setLeaveSubmittedFirst(Boolean.TRUE.equals(report.getIsLeaveSubmittedFirst()));
 
         dto.setTotalWorkingDays(report.getTotalWorkingDays());
         dto.setEffectiveWorkingDays(report.getEffectiveWorkingDays());
         dto.setLoggedWorkingDays(report.getLoggedWorkingDays());
 
-        dto.setJiraEntries(report.getJiraEntries());
-        dto.setLeaveEntries(report.getLeaveEntries());
+        List<JiraEntryDTO> jiraEntryDTOS = report.getJiraEntries().stream().map(JiraEntryService::mapToDTO).toList();
+        dto.setJiraEntries(jiraEntryDTOS);
+
+        List<LeaveEntryDTO> leaveEntryDTOS = report.getLeaveEntries().stream().map(LeaveEntryService::mapToDTO).toList();
+        dto.setLeaveEntries(leaveEntryDTOS);
 
         return dto;
     }

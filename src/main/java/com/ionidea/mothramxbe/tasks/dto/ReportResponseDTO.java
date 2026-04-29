@@ -29,12 +29,12 @@ public class ReportResponseDTO {
     // ✅ New fields from Report entity
     private Integer totalWorkingDays;
 
-    private Integer effectiveWorkingDays;
+    private Double effectiveWorkingDays;
 
-    private Integer loggedWorkingDays;
+    private Double loggedWorkingDays;
 
-    private List<JiraEntry> jiraEntries;
+    private List<JiraEntryDTO> jiraEntries;
 
-    private List<LeaveEntry> leaveEntries;
+    private List<LeaveEntryDTO> leaveEntries;
 
 }
